@@ -32,7 +32,6 @@ public class Teleer {
 	private int _secondsToPauseBeforeNextTeleport;
 
 	private Teleer() {
-		this._allTelePads = AllTelePads.get(this._eithonPlugin);
 	}
 
 	static Teleer get()
@@ -54,6 +53,7 @@ public class Teleer {
 		this._secondsToPauseBeforeNextTeleport = config.getInt("SecondsToPauseBeforeNextTeleport", 5);
 		this._coolDown = new CoolDown("telepad", this._secondsToPauseBeforeNextTeleport);
 		this._playersAboutToTele = new PlayerCollection<TelePadInfo>(new TelePadInfo());
+		this._allTelePads = AllTelePads.get(this._eithonPlugin);
 	}
 
 	void disable() {
