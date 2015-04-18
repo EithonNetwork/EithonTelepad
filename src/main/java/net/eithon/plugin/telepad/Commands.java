@@ -8,13 +8,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class Commands {
 	private static Commands singleton = null;
 	private static final String ADD_COMMAND = "/telepad add <name>";
 	private static final String GOTO_COMMAND = "/telepad goto <name>";
-	private static final String RELOAD_COMMAND = "/telepad reload";
 	private static final String REMOVE_COMMAND = "/telepad remove <name>";
 	private static final String LINK_COMMAND = "/telepad link <name 1> <name 2>";
 	private static final String RULES_COMMAND_BEGINNING = "/rules";
@@ -23,7 +21,7 @@ public class Commands {
 	private AllTelePads _allTelePads = null;
 
 	private Commands() {
-		this._allTelePads = AllTelePads.get(_eithonPlugin);
+		this._allTelePads = AllTelePads.get(this._eithonPlugin);
 	}
 
 	static Commands get()

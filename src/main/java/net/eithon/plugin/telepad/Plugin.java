@@ -1,7 +1,5 @@
 package net.eithon.plugin.telepad;
 
-import java.io.File;
-
 import net.eithon.library.extensions.EithonPlugin;
 
 import org.bukkit.Material;

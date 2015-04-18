@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 import net.eithon.library.extensions.EithonPlugin;
 import net.eithon.library.json.Converter;
-import net.eithon.library.misc.Debug.DebugPrintLevel;
+import net.eithon.library.plugin.Logger.DebugPrintLevel;
 import net.eithon.library.time.TimeMisc;
 
 import org.bukkit.Bukkit;
@@ -91,10 +91,10 @@ public class AllTelePads {
 			telePads.add(telePadInfo.toJson());
 		}
 		if ((telePads == null) || (telePads.size() == 0)) {
-			this._eithonPlugin.getDebug().info("No TelePads saved.");
+			this._eithonPlugin.getLogger().info("No TelePads saved.");
 			return;
 		}
-		this._eithonPlugin.getDebug().info("Saving %d TelePads", telePads.size());
+		this._eithonPlugin.getLogger().info("Saving %d TelePads", telePads.size());
 		File file = getTelepadStorageFile();
 		Converter.save(file, Converter.fromBody("TelePad", 1, (Object) telePads));
 	}
@@ -108,15 +108,15 @@ public class AllTelePads {
 		File file = getTelepadStorageFile();
 		JSONObject data = Converter.load(this._eithonPlugin, file);
 		if (data == null) {
-			this._eithonPlugin.getDebug().debug(DebugPrintLevel.MAJOR, "File was empty.");
+			this._eithonPlugin.getLogger().debug(DebugPrintLevel.MAJOR, "File was empty.");
 			return;			
 		}
 		JSONArray array = (JSONArray) Converter.toBodyPayload(data);
 		if ((array == null) || (array.size() == 0)) {
-			this._eithonPlugin.getDebug().debug(DebugPrintLevel.MAJOR, "The list of TelePads was empty.");
+			this._eithonPlugin.getLogger().debug(DebugPrintLevel.MAJOR, "The list of TelePads was empty.");
 			return;
 		}
-		this._eithonPlugin.getDebug().info("Restoring %d TelePads from loaded file.", array.size());
+		this._eithonPlugin.getLogger().info("Restoring %d TelePads from loaded file.", array.size());
 		this.telePadsByBlock = new HashMap<String, TelePadInfo>();
 		this.telePadsByName = new HashMap<String, TelePadInfo>();
 		for (int i = 0; i < array.size(); i++) {
