@@ -1,0 +1,45 @@
+#
+# The time that Nausea is active from the time when the user activates the TelePad
+#
+NauseaTicks: 200
+
+#
+# The time that Slowness is active from the time when the user activates the TelePad
+#
+SlownessTicks: 0
+
+#
+# The time that Blindness is active from the time when the user activates the TelePad
+#
+BlindnessTicks: 0
+
+#
+# After how long time (from the activation time) should we disable all effects
+#
+DisableEffectsAfterTicks: 120
+
+#
+# From the time when the user activates the TelePad, how long until we actually TelePad
+#
+TeleportAfterTicks: 100
+
+#
+# Print out debug information
+#
+DoDebugPrint: 0
+
+#
+# The time to wait before we load the telepad data from file
+#
+SecondsBeforeLoad: 5.0
+
+#
+# Cool down period before you can jump again
+#
+SecondsToPauseBeforeNextTeleport: 5
+
+
+
+
+
+

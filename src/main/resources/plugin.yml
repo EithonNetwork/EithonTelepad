@@ -1,0 +1,39 @@
+name: EithonTelePad
+main: net.eithon.plugin.telepad.Plugin
+version: 1.0
+author: vanbrayne
+description: A Minecraft plugin for so called "Jump Pad" functionality
+depend: [EithonLibrary]
+commands:
+  telepad:
+    description: Control jump pads
+    usage: /telepad add | link | remove  | goto | list | reload
+    permission-message: You don't have <permission>
+permissions:
+  telepad.*:
+    description: Gives access to all telepad commands
+    default: op
+    telepad.add: true
+    telepad.link: true
+    telepad.remove: true
+    telepad.list: true
+    telepad.goto: true
+    telepad.tele: true
+  telepad.add:
+    description: Access to /telepad add command
+    default: op
+  telepad.link:
+    description: Access to /telepad link command
+    default: op
+  telepad.remove:
+    description: Access to /telepad remove command
+    default: op
+  telepad.list:
+    description: Access to /telepad list command
+    default: op
+  telepad.goto:
+    description: Access to /telepad goto command
+    default: op
+  telepad.tele:
+    description: Can teleport from a telepad
+    default: op
