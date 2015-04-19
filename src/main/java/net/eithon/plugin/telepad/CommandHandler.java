@@ -34,8 +34,6 @@ public class CommandHandler implements ICommandHandler {
 	public CommandHandler(EithonPlugin eithonPlugin, Controller controller) {
 		this._controller = controller;
 		Configuration config = eithonPlugin.getConfiguration();
-		double seconds = config.getDouble("SecondsBeforeLoad", 5.0);
-		this._allTelePads.delayedLoad(eithonPlugin, seconds);
 		telePadAddedMessage = config.getConfigurableMessage("TelePadAdded", 1,
 				"TelePad %s has been added.");
 		nextStepAfterAddMessage = config.getConfigurableMessage("NextStepAfterAdd", 1,

@@ -10,7 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public final class EventListener extends EithonPlugin implements Listener {
+public final class EventListener implements Listener {
 	
 	private net.eithon.plugin.telepad.Controller _controller;
 	public EventListener(EithonPlugin eithonPlugin, Controller controller) {

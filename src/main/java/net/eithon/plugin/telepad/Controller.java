@@ -41,7 +41,9 @@ public class Controller {
 		this._secondsToPauseBeforeNextTeleport = config.getInt("SecondsToPauseBeforeNextTeleport", 5);
 		this._coolDown = new CoolDown("telepad", this._secondsToPauseBeforeNextTeleport);
 		this._playersAboutToTele = new PlayerCollection<TelePadInfo>(new TelePadInfo());
-		this._allTelePads = AllTelePads.get(this._eithonPlugin);
+		this._allTelePads = new AllTelePads(eithonPlugin);
+		double seconds = config.getDouble("SecondsBeforeLoad", 5.0);
+		this._allTelePads.delayedLoad(eithonPlugin, seconds);
 	}
 
 	void maybeTele(Player player, Block pressurePlate) {

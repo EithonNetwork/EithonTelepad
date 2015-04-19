@@ -18,26 +18,18 @@ import org.json.simple.JSONObject;
 
 
 public class AllTelePads {
-	private static AllTelePads singleton = null;
 
 	private HashMap<String, TelePadInfo> telePadsByBlock = null;
 	private HashMap<String, TelePadInfo> telePadsByName = null;
 
 	private EithonPlugin _eithonPlugin;
 
-	private AllTelePads(EithonPlugin eithonPlugin) {
+	public AllTelePads(EithonPlugin eithonPlugin) {
 		this._eithonPlugin = eithonPlugin;
 		this.telePadsByBlock = new HashMap<String, TelePadInfo>();
 		this.telePadsByName = new HashMap<String, TelePadInfo>();
 	}
-
-	static AllTelePads get(EithonPlugin eithonPlugin) {
-		if (singleton == null) {
-			singleton = new AllTelePads(eithonPlugin);
-		}
-		return singleton;
-	}
-
+	
 	void add(TelePadInfo info) {
 		this.telePadsByBlock.put(info.getBlockHash(), info);
 		this.telePadsByName.put(info.getTelePadName(), info);
