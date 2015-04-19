@@ -1,6 +1,7 @@
 package net.eithon.plugin.telepad;
 
 import net.eithon.library.extensions.EithonPlugin;
+import net.eithon.plugin.telepad.logic.Controller;
 
 import org.bukkit.event.Listener;
 

@@ -1,4 +1,4 @@
-package net.eithon.plugin.telepad;
+package net.eithon.plugin.telepad.logic;
 
 import java.util.ArrayList;
 
@@ -46,7 +46,7 @@ public class Controller {
 		this._allTelePads.delayedLoad(eithonPlugin, seconds);
 	}
 
-	void maybeTele(Player player, Block pressurePlate) {
+	public void maybeTele(Player player, Block pressurePlate) {
 		if (pressurePlate.getType() != Material.STONE_PLATE) return;
 		Location location = pressurePlate.getLocation();
 		TelePadInfo info = this._allTelePads.getByLocation(location);

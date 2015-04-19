@@ -6,6 +6,9 @@ import net.eithon.library.plugin.CommandParser;
 import net.eithon.library.plugin.ConfigurableMessage;
 import net.eithon.library.plugin.Configuration;
 import net.eithon.library.plugin.ICommandHandler;
+import net.eithon.plugin.telepad.logic.AllTelePads;
+import net.eithon.plugin.telepad.logic.Controller;
+import net.eithon.plugin.telepad.logic.TelePadInfo;
 
 import org.bukkit.Location;
 import org.bukkit.Material;

@@ -1,4 +1,4 @@
-package net.eithon.plugin.telepad;
+package net.eithon.plugin.telepad.logic;
 
 import java.io.File;
 import java.util.Collection;
@@ -30,17 +30,17 @@ public class AllTelePads {
 		this.telePadsByName = new HashMap<String, TelePadInfo>();
 	}
 	
-	void add(TelePadInfo info) {
+	public void add(TelePadInfo info) {
 		this.telePadsByBlock.put(info.getBlockHash(), info);
 		this.telePadsByName.put(info.getTelePadName(), info);
 	}
 
-	void remove(TelePadInfo info) {
+	public void remove(TelePadInfo info) {
 		this.telePadsByName.remove(info.getTelePadName());
 		this.telePadsByBlock.remove(info.getBlockHash());
 	}
 
-	Collection<TelePadInfo> getAll() {
+	public Collection<TelePadInfo> getAll() {
 		return this.telePadsByName.values();
 	}
 
@@ -51,7 +51,7 @@ public class AllTelePads {
 		return this.telePadsByBlock.get(position);
 	}
 
-	TelePadInfo getByName(String name) {
+	public TelePadInfo getByName(String name) {
 		if (!this.telePadsByName.containsKey(name)) return null;
 		return this.telePadsByName.get(name);
 	}
@@ -77,6 +77,7 @@ public class AllTelePads {
 	}
 
 	@SuppressWarnings("unchecked")
+	public
 	void save() {
 		JSONArray telePads = new JSONArray();
 		for (TelePadInfo telePadInfo : getAll()) {

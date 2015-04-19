@@ -1,4 +1,4 @@
-package net.eithon.plugin.telepad;
+package net.eithon.plugin.telepad.logic;
 
 import java.util.UUID;
 
@@ -12,14 +12,14 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
-class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
+public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 	private Location sourceLocation;
 	private Location targetLocation;
 	private String telePadName;
 	private UUID creatorId;
 	private String creatorName;
 
-	TelePadInfo(String name, Location sourceLocation, Location targetLocation, Player creator)
+	public TelePadInfo(String name, Location sourceLocation, Location targetLocation, Player creator)
 	{
 		this.telePadName = name;
 		this.sourceLocation = sourceLocation;
@@ -44,6 +44,21 @@ class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 	}
 
 	TelePadInfo() {
+	}
+
+	@Override
+	public TelePadInfo factory() {
+		return new TelePadInfo();
+	}
+
+	@Override
+	public void fromJson(Object json) {
+		JSONObject jsonObject = (JSONObject) json;
+		this.telePadName = (String) jsonObject.get("name");
+		this.sourceLocation = Converter.toLocation((JSONObject)jsonObject.get("sourceLocation"), null);
+		this.targetLocation = Converter.toLocation((JSONObject)jsonObject.get("targetLocation"), null);
+		this.creatorId = Converter.toPlayerId((JSONObject) jsonObject.get("creator"));
+		this.creatorName= Converter.toPlayerName((JSONObject) jsonObject.get("creator"));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -72,7 +87,7 @@ class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 		return this.sourceLocation;
 	}
 
-	Location getSourceAsTarget() {
+	public Location getSourceAsTarget() {
 		Location location = this.sourceLocation.clone();
 		location.setX(location.getX() + 0.5);
 		location.setZ(location.getZ() + 0.5);
@@ -109,20 +124,5 @@ class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 
 	public String toString() {
 		return String.format("%s (%s): from %s toy %s", getTelePadName(), getName(), getSource().getBlock().toString(), getTargetLocation().toString());
-	}
-
-	@Override
-	public TelePadInfo factory() {
-		return new TelePadInfo();
-	}
-
-	@Override
-	public void fromJson(Object json) {
-		JSONObject jsonObject = (JSONObject) json;
-		this.telePadName = (String) jsonObject.get("name");
-		this.sourceLocation = Converter.toLocation((JSONObject)jsonObject.get("sourceLocation"), null);
-		this.targetLocation = Converter.toLocation((JSONObject)jsonObject.get("targetLocation"), null);
-		this.creatorId = Converter.toPlayerId((JSONObject) jsonObject.get("creator"));
-		this.creatorName= Converter.toPlayerName((JSONObject) jsonObject.get("creator"));
 	}
 }
