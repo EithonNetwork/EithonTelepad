@@ -38,6 +38,23 @@ SecondsBeforeLoad: 5.0
 #
 SecondsToPauseBeforeNextTeleport: 5
 
+messages:
+
+  #
+  # Parameters: <telepad name> (%s)
+  TelePadAdded: TelePad %s has been added.
+
+  #
+  # Parameters: <telepad name> (%s)
+  TelePadRemoved: TelePad %s has been removed.
+
+  #
+  # Parameters: <telepad name> (%s)
+  NextStepAfterAdd: Now link this telepad with command /telepad link %s <other telepad name>.
+
+  #
+  # Parameters: <telepad name 1> (%s) <telepad name 2> (%s)
+  TelePadsLinked: TelePad %s and %s has been linked.
 
 
 

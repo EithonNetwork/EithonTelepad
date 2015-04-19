@@ -17,8 +17,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
-public class Teleer {
-	private static Teleer singleton = null;
+public class Controller {
 
 	private PlayerCollection<TelePadInfo> _playersAboutToTele = null;
 	CoolDown _coolDown = null;
@@ -31,18 +30,7 @@ public class Teleer {
 	private long _disableEffectsAfterTicks;
 	private int _secondsToPauseBeforeNextTeleport;
 
-	private Teleer() {
-	}
-
-	static Teleer get()
-	{
-		if (singleton == null) {
-			singleton = new Teleer();
-		}
-		return singleton;
-	}
-
-	void enable(EithonPlugin eithonPlugin){
+	public Controller(EithonPlugin eithonPlugin){
 		this._eithonPlugin = eithonPlugin;
 		Configuration config = eithonPlugin.getConfiguration();
 		this._ticksBeforeTele = config.getInt("TeleportAfterTicks", 0);
@@ -54,9 +42,6 @@ public class Teleer {
 		this._coolDown = new CoolDown("telepad", this._secondsToPauseBeforeNextTeleport);
 		this._playersAboutToTele = new PlayerCollection<TelePadInfo>(new TelePadInfo());
 		this._allTelePads = AllTelePads.get(this._eithonPlugin);
-	}
-
-	void disable() {
 	}
 
 	void maybeTele(Player player, Block pressurePlate) {
@@ -116,7 +101,7 @@ public class Teleer {
 		final boolean hasBlindness = blindness != null;
 		player.addPotionEffects(effects);
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-		scheduler.scheduleSyncDelayedTask(this._eithonPlugin.getJavaPlugin(), new Runnable() {
+		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
 				player.setWalkSpeed(nextWalkSpeed);
 				if (hasNausea) player.removePotionEffect(PotionEffectType.CONFUSION);
@@ -124,8 +109,8 @@ public class Teleer {
 				if (hasBlindness) player.removePotionEffect(PotionEffectType.BLINDNESS);
 			}
 		}, this._disableEffectsAfterTicks);
-		final Teleer instance = this;
-		scheduler.scheduleSyncDelayedTask(this._eithonPlugin.getJavaPlugin(), new Runnable() {
+		final Controller instance = this;
+		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
 				if (!isAboutToTele(player)) return;
 				setPlayerIsAboutToTele(player, info, false);
