@@ -117,7 +117,7 @@ public class Controller {
 				if (!isAboutToTele(player)) return;
 				setPlayerIsAboutToTele(player, info, false);
 				instance.coolDown(player);
-				tele(player, info);
+				jumpOrTele(player, info);
 			}
 		}, this._ticksBeforeTele);
 	}
@@ -129,9 +129,20 @@ public class Controller {
 		return walkSpeed;
 	}
 
-	void tele(Player player, TelePadInfo info) {
+	void jumpOrTele(Player player, TelePadInfo info) {
+		if (info.hasVelocity()) jump(player, info);
+		else tele(player, info);
+	}
+	
+	private void tele(Player player, TelePadInfo info) {
 		Location targetLocation = info.getTargetLocation();
 		player.teleport(targetLocation);
+	}
+	
+	private void jump(Player player, TelePadInfo info) {
+		Vector jumpPadVelocity = info.getVelocity();
+		Vector velocity = new Vector(jumpPadVelocity.getX(), jumpPadVelocity.getY(), jumpPadVelocity.getZ());
+		player.setVelocity(velocity);
 	}
 	
 	public void coolDown(Player player) {
