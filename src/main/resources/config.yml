@@ -56,6 +56,11 @@ messages:
   # Parameters: <telepad name 1> (%s) <telepad name 2> (%s)
   TelePadsLinked: TelePad %s and %s has been linked.
 
+  #
+  # Parameters: <telepad name> (%s)
+  GotoTelepad: You have been teleported to TelePad %s.
+
+
 
 
 
