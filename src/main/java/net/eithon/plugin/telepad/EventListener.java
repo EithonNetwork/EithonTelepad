@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 
 public final class EventListener implements Listener {
 	
@@ -27,5 +28,12 @@ public final class EventListener implements Listener {
 		if (pressurePlate == null) return;
 		if (pressurePlate.getType() != Material.STONE_PLATE) return;
 		this._controller.maybeTele(player, pressurePlate);
+	}
+
+	@EventHandler
+	public void onPlayerInteractEvent(PlayerMoveEvent event) {
+		if (event.isCancelled()) return;
+		Player player = event.getPlayer();
+		this._controller.maybeStopTele(player);
 	}
 }
