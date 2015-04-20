@@ -43,6 +43,7 @@ public class Config {
 		public static ConfigurableMessage telePadRemoved;
 		public static ConfigurableMessage telePadsLinked;
 		public static ConfigurableMessage gotoTelePad;
+		public static ConfigurableMessage movedOffTelePad;
 
 		static void load(Configuration config) {
 			telePadAdded = config.getConfigurableMessage("TelePadAdded", 1,
@@ -55,6 +56,8 @@ public class Config {
 					"TelePad %s and %s has been linked.");
 			gotoTelePad = config.getConfigurableMessage("GotoTelepad", 1,
 					"You have been teleported to TelePad %s.");
+			movedOffTelePad = config.getConfigurableMessage("MovedOffTelePad_0", 0,
+					"You moved away from the telepad, cancelling teleport.");
 		}		
 	}
 

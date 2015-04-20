@@ -40,18 +40,11 @@ public class Controller {
 		Location location = pressurePlate.getLocation();
 		TelePadInfo info = this._allTelePads.getByLocation(location);
 		if (info == null) return;
-		
-		/*
-		if (!hasReadRules(player)) {
-			maybeTellPlayerToReadTheRules(player);
-			return;
-		}
-		*/
+
 		if (isInCoolDownPeriod(player)) return;
 		if (isAboutToTele(player)) return;
 		
-		float oldWalkSpeed = stopPlayer(player);
-		teleSoon(player, info, oldWalkSpeed);
+		teleSoon(player, info);
 	}
 
 	boolean isAboutToTele(Player player) {
@@ -68,8 +61,7 @@ public class Controller {
 		}
 	}
 
-	private void teleSoon(Player player, TelePadInfo info, float oldWalkSpeed) {
-		final float nextWalkSpeed =  (oldWalkSpeed > 0.0F ? oldWalkSpeed : 1.0F);
+	private void teleSoon(Player player, TelePadInfo info) {
 		setPlayerIsAboutToTele(player, info, true);
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
@@ -94,7 +86,6 @@ public class Controller {
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
-				player.setWalkSpeed(nextWalkSpeed);
 				if (hasNausea) player.removePotionEffect(PotionEffectType.CONFUSION);
 				if (hasSlowness) player.removePotionEffect(PotionEffectType.SLOW);
 				if (hasBlindness) player.removePotionEffect(PotionEffectType.BLINDNESS);
@@ -140,5 +131,13 @@ public class Controller {
 
 	public boolean isInCoolDownPeriod(Player player) {
 		return this._coolDown.isInCoolDownPeriod(player);
+	}
+
+	public void maybeStopTele(Player player) {
+		if (!isAboutToTele(player)) return;
+		Block block = player.getLocation().getBlock();
+		if ((block != null) && (block.getType() == Material.STONE_PLATE)) return;
+		setPlayerIsAboutToTele(player, null, false);
+		Config.M.movedOffTelePad.sendMessage(player);
 	}
 }

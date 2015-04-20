@@ -60,6 +60,10 @@ messages:
   # Parameters: <telepad name> (%s)
   GotoTelepad: You have been teleported to TelePad %s.
 
+  #
+  # Parameters: NONE
+  MovedOffTelePad_0: You moved away from the telepad, cancelling teleport.
+
 
 
 
