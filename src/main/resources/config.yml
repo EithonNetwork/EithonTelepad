@@ -24,9 +24,14 @@ DisableEffectsAfterTicks: 120
 TeleportAfterTicks: 100
 
 #
-# Print out debug information
+# Debug level
+#	0 = NONE (no debug messages)
+#	1 = MAJOR (only major messages)
+#	2 = MINOR (also minor messages)
+#	3 = VERBOSE (all messages)
 #
-DoDebugPrint: 0
+EithonDebugLevel: 0
+
 
 #
 # The time to wait before we load the telepad data from file

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import net.eithon.library.extensions.EithonPlugin;
 import net.eithon.library.json.PlayerCollection;
 import net.eithon.library.plugin.Configuration;
+import net.eithon.library.plugin.Logger.DebugPrintLevel;
 import net.eithon.library.time.CoolDown;
 import net.eithon.plugin.telepad.Config;
 
@@ -36,14 +37,24 @@ public class Controller {
 	}
 
 	public void maybeTele(Player player, Block pressurePlate) {
-		if (pressurePlate.getType() != Material.STONE_PLATE) return;
+		debug("maybeTele", "Enter");
 		Location location = pressurePlate.getLocation();
 		TelePadInfo info = this._allTelePads.getByLocation(location);
-		if (info == null) return;
+		if (info == null) {
+			debug("maybeTele", "No telepad found at the location");
+			return;
+		}
 
-		if (isInCoolDownPeriod(player)) return;
-		if (isAboutToTele(player)) return;
+		if (isInCoolDownPeriod(player)) {
+			debug("maybeTele", "Player is in cool down period");
+			return;
+		}
+		if (isAboutToTele(player)) {
+			debug("maybeTele", "Player already waiting for teleport to happenh");
+			return;
+		}
 		
+		debug("maybeTele", "Teleport sequence is starting");
 		teleSoon(player, info);
 	}
 
@@ -62,22 +73,26 @@ public class Controller {
 	}
 
 	private void teleSoon(Player player, TelePadInfo info) {
+		debug("teleSoon", "Enter");
 		setPlayerIsAboutToTele(player, info, true);
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
+			debug("teleSoon", "Add nausea");
 			nausea = new PotionEffect(PotionEffectType.CONFUSION, (int) Config.V.nauseaTicks, 4);
 			effects.add(nausea);
 		}
 		final boolean hasNausea = nausea != null;
 		PotionEffect slowness = null;
 		if (Config.V.nauseaTicks > 0) {
+			debug("teleSoon", "Add slowness");
 			slowness = new PotionEffect(PotionEffectType.SLOW, (int) Config.V.slownessTicks, 4);
 			effects.add(slowness);
 		}
 		final boolean hasSlowness = slowness != null;
 		PotionEffect blindness = null;
 		if (Config.V.blindnessTicks > 0) {
+			debug("teleSoon", "Add blindness");
 			blindness = new PotionEffect(PotionEffectType.BLINDNESS, (int) Config.V.blindnessTicks, 4);
 			effects.add(blindness);
 		}
@@ -86,6 +101,7 @@ public class Controller {
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
+				debug("teleSoon (delayed1)", "Remove effects");
 				if (hasNausea) player.removePotionEffect(PotionEffectType.CONFUSION);
 				if (hasSlowness) player.removePotionEffect(PotionEffectType.SLOW);
 				if (hasBlindness) player.removePotionEffect(PotionEffectType.BLINDNESS);
@@ -94,9 +110,16 @@ public class Controller {
 		final Controller instance = this;
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
-				if (!isAboutToTele(player)) return;
+				debug("teleSoon (delayed2)", "Last chance to change our mind");
+				if (!isAboutToTele(player)) {
+					debug("teleSoon (delayed2)", "The teleport seems to have been cancelled");
+					return;
+				}
+				debug("teleSoon (delayed2)", "Mark the player for teleportation");
 				setPlayerIsAboutToTele(player, info, false);
+				debug("teleSoon (delayed2)", "Set a cool down period");
 				instance.coolDown(player);
+				debug("teleSoon (delayed2)", "No return now, do the teleport!");
 				jumpOrTele(player, info);
 			}
 		}, Config.V.ticksBeforeTele);
@@ -110,8 +133,15 @@ public class Controller {
 	}
 
 	void jumpOrTele(Player player, TelePadInfo info) {
-		if (info.hasVelocity()) jump(player, info);
-		else tele(player, info);
+		debug("jumpOrTele", "Enter");
+		if (info.hasVelocity()) {
+			debug("jumpOrTele", "JUMP!");
+			jump(player, info);
+		}
+		else {
+			debug("jumpOrTele", "TELEPORT!");
+			tele(player, info);
+		}
 	}
 	
 	private void tele(Player player, TelePadInfo info) {
@@ -139,5 +169,9 @@ public class Controller {
 		if ((block != null) && (block.getType() == Material.STONE_PLATE)) return;
 		setPlayerIsAboutToTele(player, null, false);
 		Config.M.movedOffTelePad.sendMessage(player);
+	}
+
+	void debug(String method, String message) {
+		this._eithonPlugin.getEithonLogger().debug(DebugPrintLevel.VERBOSE, "%s: %s", method, message);
 	}
 }

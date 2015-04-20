@@ -47,9 +47,17 @@ public class AllTelePads {
 	}
 
 	TelePadInfo getByLocation(Location location) {
-		if (this.telePadsByBlock == null) return null;
+		debug("AllTelePads.getByLocation", "Enter");
+		if (this.telePadsByBlock == null) {
+			debug("AllTelePads.getByLocation", "telePadsByBlock == null");
+			return null;
+		}
 		String position = TelePadInfo.toBlockHash(location);
-		if (!this.telePadsByBlock.containsKey(position)) return null;
+		if (!this.telePadsByBlock.containsKey(position)) {
+			debug("AllTelePads.getByLocation", "No telepads at position " + position);
+			return null;
+		}
+		debug("AllTelePads.getByLocation", "Found a telepad.");
 		return this.telePadsByBlock.get(position);
 	}
 
@@ -119,5 +127,9 @@ public class AllTelePads {
 			info.fromJson((JSONObject) array.get(i));
 			this.add(info);
 		}
+	}
+
+	void debug(String method, String message) {
+		this._eithonPlugin.getEithonLogger().debug(DebugPrintLevel.VERBOSE, "%s: %s", method, message);
 	}
 }
