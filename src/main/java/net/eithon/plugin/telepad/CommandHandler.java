@@ -3,8 +3,6 @@ package net.eithon.plugin.telepad;
 import net.eithon.library.extensions.EithonLocation;
 import net.eithon.library.extensions.EithonPlugin;
 import net.eithon.library.plugin.CommandParser;
-import net.eithon.library.plugin.ConfigurableMessage;
-import net.eithon.library.plugin.Configuration;
 import net.eithon.library.plugin.ICommandHandler;
 import net.eithon.plugin.telepad.logic.AllTelePads;
 import net.eithon.plugin.telepad.logic.Controller;
@@ -15,20 +13,16 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 public class CommandHandler implements ICommandHandler {
 	private static final String ADD_COMMAND = "/telepad add <name>";
+	private static final String VELOCITY_COMMAND = "/telepad velocity <name> <up speed> <forward speed>";
 	private static final String GOTO_COMMAND = "/telepad goto <name>";
 	private static final String LIST_COMMAND = "/telepad list";
 	private static final String REMOVE_COMMAND = "/telepad remove <name>";
 	private static final String LINK_COMMAND = "/telepad link <name 1> <name 2>";
 	private static final String RULES_COMMAND_BEGINNING = "/rules";
-
-	private static ConfigurableMessage telePadAddedMessage;	
-	private static ConfigurableMessage nextStepAfterAddMessage;	
-	private static ConfigurableMessage telePadRemovedMessage;
-	private static ConfigurableMessage telePadsLinkedMessage;
-	private static ConfigurableMessage gotoTelePadMessage;
 
 	private EithonPlugin _eithonPlugin = null;
 	private AllTelePads _allTelePads = null;
@@ -36,17 +30,6 @@ public class CommandHandler implements ICommandHandler {
 
 	public CommandHandler(EithonPlugin eithonPlugin, Controller controller) {
 		this._controller = controller;
-		Configuration config = eithonPlugin.getConfiguration();
-		telePadAddedMessage = config.getConfigurableMessage("TelePadAdded", 1,
-				"TelePad %s has been added.");
-		nextStepAfterAddMessage = config.getConfigurableMessage("NextStepAfterAdd", 1,
-				"Now link this telepad with command /telepad link %s <other telepad name>.");
-		telePadRemovedMessage = config.getConfigurableMessage("TelePadRemoved", 1,
-				"TelePad %s has been removed.");
-		telePadsLinkedMessage = config.getConfigurableMessage("TelePadsLinked", 2,
-				"TelePad %s and %s has been linked.");
-		gotoTelePadMessage = config.getConfigurableMessage("GotoTelepad", 1,
-				"You have been teleported to TelePad %s.");
 	}
 
 	void disable() {
@@ -64,6 +47,8 @@ public class CommandHandler implements ICommandHandler {
 			addCommand(commandParser);
 		} else if (command.equals("link")) {
 			linkCommand(commandParser);
+		} else if (command.equals("velocity")) {
+			velocityCommand(commandParser);
 		} else if (command.equals("remove")) {
 			removeCommand(commandParser);
 		} else if (command.equals("list")) {
@@ -89,9 +74,31 @@ public class CommandHandler implements ICommandHandler {
 		double forwardSpeed = 0.0;
 
 		createOrUpdateTelePad(player, name, upSpeed, forwardSpeed);
-		CommandHandler.telePadAddedMessage.sendMessage(player, name);
-		CommandHandler.nextStepAfterAddMessage.sendMessage(player, name);
+		Config.M.telePadAdded.sendMessage(player, name);
+		Config.M.nextStepAfterAdd.sendMessage(player, name);
 		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);
+	}
+
+
+
+	void velocityCommand(CommandParser commandParser)
+	{
+		if (!commandParser.hasPermissionOrInformSender("telepad.velocity")) return;
+		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(3, 4)) return;
+
+		String name =commandParser.getArgumentStringAsLowercase(1);
+		Player player = commandParser.getPlayer();
+		TelePadInfo info = this._allTelePads.getByName(name);
+		if (info == null)
+		{
+			player.sendMessage("Unknown telepad: " + name);
+			return;	
+		}
+
+		double upSpeed = commandParser.getArgumentDouble(2, 0.0);
+		double forwardSpeed = commandParser.getArgumentDouble(3, 0.0);
+
+		createOrUpdateTelePad(player, name, upSpeed, forwardSpeed);
 	}
 
 	void removeCommand(CommandParser commandParser)
@@ -108,7 +115,7 @@ public class CommandHandler implements ICommandHandler {
 			return;	
 		}
 		this._allTelePads.remove(info);
-		CommandHandler.telePadRemovedMessage.sendMessage(player, name);
+		Config.M.telePadRemoved.sendMessage(player, name);
 		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);
 	}
 
@@ -135,7 +142,7 @@ public class CommandHandler implements ICommandHandler {
 
 		info1.setTarget(info2.getSourceAsTarget());
 		info2.setTarget(info1.getSourceAsTarget());
-		CommandHandler.telePadsLinkedMessage.sendMessage(player, name1, name2);
+		Config.M.telePadsLinked.sendMessage(player, name1, name2);
 		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);
 	}
 
@@ -154,7 +161,7 @@ public class CommandHandler implements ICommandHandler {
 		}
 		player.teleport(info.getSourceAsTarget());
 		this._controller.coolDown(player);
-		CommandHandler.gotoTelePadMessage.sendMessage(player, name);
+		Config.M.gotoTelePad.sendMessage(player, name);
 	}
 
 	void listCommand(CommandParser commandParser)
@@ -193,14 +200,28 @@ public class CommandHandler implements ICommandHandler {
 		// Remember where the player looked when the telepad was created/updated
 		padLocation.setYaw(playerLocation.getYaw());
 		padLocation.setPitch(playerLocation.getPitch());
-		try {
-			TelePadInfo newInfo = new TelePadInfo(name, padLocation, padLocation, player);
-			this._allTelePads.add(newInfo);
-			if (player != null) this._controller.coolDown(player);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return;
+
+		TelePadInfo telePadInfo = this._allTelePads.getByName(name);
+		if ((upSpeed != 0.0) || (forwardSpeed != 0.0)) {
+			Vector velocity;
+			velocity = convertToVelocityVector(playerLocation.getYaw(), upSpeed, forwardSpeed);
+			if (telePadInfo != null) telePadInfo.setVelocity(velocity);
+			else telePadInfo = new TelePadInfo(name, padLocation, velocity, player);
+		} else {
+			if (telePadInfo != null) telePadInfo.setTarget(padLocation);
+			else telePadInfo = new TelePadInfo(name, padLocation, padLocation, player);
 		}
+		this._allTelePads.add(telePadInfo);
+		if (player != null) this._controller.coolDown(player);
+	}
+
+	private Vector convertToVelocityVector(double yaw, double upSpeed, double forwardSpeed) {
+		double rad = yaw*Math.PI/180.0;
+		double vectorX = -Math.sin(rad)*forwardSpeed;
+		double vectorY = upSpeed;
+		double vectorZ = Math.cos(rad)*forwardSpeed;
+		Vector jumpVector = new Vector(vectorX, vectorY, vectorZ);
+		return jumpVector;
 	}
 
 	void listenToCommands(Player player, String message) {
@@ -216,6 +237,8 @@ public class CommandHandler implements ICommandHandler {
 
 		if (command.equals("add")) {
 			sender.sendMessage(ADD_COMMAND);
+		} else if (command.equals("velocity")) {
+			sender.sendMessage(VELOCITY_COMMAND);
 		} else if (command.equals("link")) {
 			sender.sendMessage(LINK_COMMAND);
 		} else if (command.equals("remove")) {

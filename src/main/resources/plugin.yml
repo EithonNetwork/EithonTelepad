@@ -7,13 +7,14 @@ depend: [EithonLibrary]
 commands:
   telepad:
     description: Control jump pads
-    usage: /telepad add | link | remove  | goto | list | reload
+    usage: /telepad add | velocity | link | remove  | goto | list | reload
     permission-message: You don't have <permission>
 permissions:
   telepad.*:
     description: Gives access to all telepad commands
     default: op
     telepad.add: true
+    telepad.velocity: true
     telepad.link: true
     telepad.remove: true
     telepad.list: true
@@ -21,6 +22,9 @@ permissions:
     telepad.tele: true
   telepad.add:
     description: Access to /telepad add command
+    default: op
+  telepad.velocity:
+    description: Access to /telepad velocity command
     default: op
   telepad.link:
     description: Access to /telepad link command
