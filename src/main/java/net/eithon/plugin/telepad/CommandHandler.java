@@ -42,7 +42,7 @@ public class CommandHandler implements ICommandHandler {
 		Player player = commandParser.getPlayerOrInformSender();
 		if (player == null) return true;
 
-		String command = commandParser.getArgumentStringAsLowercase(0);
+		String command = commandParser.getArgumentCommand();
 		if (command.equals("add")) {
 			addCommand(commandParser);
 		} else if (command.equals("link")) {
@@ -66,7 +66,7 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasPermissionOrInformSender("telepad.add")) return;
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 2)) return;
 
-		String name =commandParser.getArgumentStringAsLowercase(1);
+		String name =commandParser.getArgumentStringAsLowercase();
 		Player player = commandParser.getPlayer();
 		if (!verifyNameIsNew(player, name)) return;	
 
@@ -86,7 +86,7 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasPermissionOrInformSender("telepad.velocity")) return;
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(3, 4)) return;
 
-		String name =commandParser.getArgumentStringAsLowercase(1);
+		String name =commandParser.getArgumentStringAsLowercase();
 		Player player = commandParser.getPlayer();
 		TelePadInfo info = this._allTelePads.getByName(name);
 		if (info == null)
@@ -95,8 +95,8 @@ public class CommandHandler implements ICommandHandler {
 			return;	
 		}
 
-		double upSpeed = commandParser.getArgumentDouble(2, 0.0);
-		double forwardSpeed = commandParser.getArgumentDouble(3, 0.0);
+		double upSpeed = commandParser.getArgumentDouble(0.0);
+		double forwardSpeed = commandParser.getArgumentDouble(0.0);
 
 		createOrUpdateTelePad(player, name, upSpeed, forwardSpeed);
 	}
@@ -107,7 +107,7 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 2)) return;
 
 		Player player = commandParser.getPlayer();
-		String name =commandParser.getArgumentStringAsLowercase(1);
+		String name =commandParser.getArgumentStringAsLowercase();
 		TelePadInfo info = this._allTelePads.getByName(name);
 		if (info == null)
 		{
@@ -125,14 +125,14 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(3, 3)) return;
 
 		Player player = commandParser.getPlayer();
-		String name1 = commandParser.getArgumentStringAsLowercase(1);
+		String name1 = commandParser.getArgumentStringAsLowercase();
 		TelePadInfo info1 = this._allTelePads.getByName(name1);
 		if (info1 == null)
 		{
 			player.sendMessage("Unknown telepad: " + name1);
 			return;	
 		}
-		String name2 = commandParser.getArgumentStringAsLowercase(2);
+		String name2 = commandParser.getArgumentStringAsLowercase();
 		TelePadInfo info2 = this._allTelePads.getByName(name2);
 		if (info2 == null)
 		{
@@ -152,7 +152,7 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 2)) return;
 
 		Player player = commandParser.getPlayer();
-		String name =commandParser.getArgumentStringAsLowercase(1);
+		String name =commandParser.getArgumentStringAsLowercase();
 		TelePadInfo info = this._allTelePads.getByName(name);
 		if (info == null)
 		{
