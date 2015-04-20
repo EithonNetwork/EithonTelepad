@@ -6,6 +6,7 @@ import net.eithon.library.extensions.EithonPlugin;
 import net.eithon.library.json.PlayerCollection;
 import net.eithon.library.plugin.Configuration;
 import net.eithon.library.time.CoolDown;
+import net.eithon.plugin.telepad.Config;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -23,23 +24,11 @@ public class Controller {
 	CoolDown _coolDown = null;
 	private AllTelePads _allTelePads = null;
 	private EithonPlugin _eithonPlugin = null;
-	private long _ticksBeforeTele;
-	private long _nauseaTicks;
-	private long _slownessTicks;
-	private long _blindnessTicks;
-	private long _disableEffectsAfterTicks;
-	private int _secondsToPauseBeforeNextTeleport;
 
 	public Controller(EithonPlugin eithonPlugin){
 		this._eithonPlugin = eithonPlugin;
 		Configuration config = eithonPlugin.getConfiguration();
-		this._ticksBeforeTele = config.getInt("TeleportAfterTicks", 0);
-		this._nauseaTicks = config.getInt("NauseaTicks", 0);
-		this._slownessTicks = config.getInt("SlownessTicks", 0);
-		this._blindnessTicks = config.getInt("BlindnessTicks", 0);
-		this._disableEffectsAfterTicks = config.getInt("DisableEffectsAfterTicks", 0);
-		this._secondsToPauseBeforeNextTeleport = config.getInt("SecondsToPauseBeforeNextTeleport", 5);
-		this._coolDown = new CoolDown("telepad", this._secondsToPauseBeforeNextTeleport);
+		this._coolDown = new CoolDown("telepad", Config.V.secondsToPauseBeforeNextTeleport);
 		this._playersAboutToTele = new PlayerCollection<TelePadInfo>(new TelePadInfo());
 		this._allTelePads = new AllTelePads(eithonPlugin);
 		double seconds = config.getDouble("SecondsBeforeLoad", 5.0);
@@ -84,20 +73,20 @@ public class Controller {
 		setPlayerIsAboutToTele(player, info, true);
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
-		if (this._nauseaTicks > 0) {
-			nausea = new PotionEffect(PotionEffectType.CONFUSION, (int) this._nauseaTicks, 4);
+		if (Config.V.nauseaTicks > 0) {
+			nausea = new PotionEffect(PotionEffectType.CONFUSION, (int) Config.V.nauseaTicks, 4);
 			effects.add(nausea);
 		}
 		final boolean hasNausea = nausea != null;
 		PotionEffect slowness = null;
-		if (this._nauseaTicks > 0) {
-			slowness = new PotionEffect(PotionEffectType.SLOW, (int) this._slownessTicks, 4);
+		if (Config.V.nauseaTicks > 0) {
+			slowness = new PotionEffect(PotionEffectType.SLOW, (int) Config.V.slownessTicks, 4);
 			effects.add(slowness);
 		}
 		final boolean hasSlowness = slowness != null;
 		PotionEffect blindness = null;
-		if (this._blindnessTicks > 0) {
-			blindness = new PotionEffect(PotionEffectType.BLINDNESS, (int) this._blindnessTicks, 4);
+		if (Config.V.blindnessTicks > 0) {
+			blindness = new PotionEffect(PotionEffectType.BLINDNESS, (int) Config.V.blindnessTicks, 4);
 			effects.add(blindness);
 		}
 		final boolean hasBlindness = blindness != null;
@@ -110,7 +99,7 @@ public class Controller {
 				if (hasSlowness) player.removePotionEffect(PotionEffectType.SLOW);
 				if (hasBlindness) player.removePotionEffect(PotionEffectType.BLINDNESS);
 			}
-		}, this._disableEffectsAfterTicks);
+		}, Config.V.disableEffectsAfterTicks);
 		final Controller instance = this;
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
@@ -119,7 +108,7 @@ public class Controller {
 				instance.coolDown(player);
 				jumpOrTele(player, info);
 			}
-		}, this._ticksBeforeTele);
+		}, Config.V.ticksBeforeTele);
 	}
 
 	private float stopPlayer(Player player) {

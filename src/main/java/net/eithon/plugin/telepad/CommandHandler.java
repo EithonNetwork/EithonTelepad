@@ -24,29 +24,12 @@ public class CommandHandler implements ICommandHandler {
 	private static final String LINK_COMMAND = "/telepad link <name 1> <name 2>";
 	private static final String RULES_COMMAND_BEGINNING = "/rules";
 
-	private static ConfigurableMessage telePadAddedMessage;	
-	private static ConfigurableMessage nextStepAfterAddMessage;	
-	private static ConfigurableMessage telePadRemovedMessage;
-	private static ConfigurableMessage telePadsLinkedMessage;
-	private static ConfigurableMessage gotoTelePadMessage;
-
 	private EithonPlugin _eithonPlugin = null;
 	private AllTelePads _allTelePads = null;
 	private Controller _controller;
 
 	public CommandHandler(EithonPlugin eithonPlugin, Controller controller) {
 		this._controller = controller;
-		Configuration config = eithonPlugin.getConfiguration();
-		telePadAddedMessage = config.getConfigurableMessage("TelePadAdded", 1,
-				"TelePad %s has been added.");
-		nextStepAfterAddMessage = config.getConfigurableMessage("NextStepAfterAdd", 1,
-				"Now link this telepad with command /telepad link %s <other telepad name>.");
-		telePadRemovedMessage = config.getConfigurableMessage("TelePadRemoved", 1,
-				"TelePad %s has been removed.");
-		telePadsLinkedMessage = config.getConfigurableMessage("TelePadsLinked", 2,
-				"TelePad %s and %s has been linked.");
-		gotoTelePadMessage = config.getConfigurableMessage("GotoTelepad", 1,
-				"You have been teleported to TelePad %s.");
 	}
 
 	void disable() {
@@ -89,8 +72,8 @@ public class CommandHandler implements ICommandHandler {
 		double forwardSpeed = 0.0;
 
 		createOrUpdateTelePad(player, name, upSpeed, forwardSpeed);
-		CommandHandler.telePadAddedMessage.sendMessage(player, name);
-		CommandHandler.nextStepAfterAddMessage.sendMessage(player, name);
+		Config.M.telePadAdded.sendMessage(player, name);
+		Config.M.nextStepAfterAdd.sendMessage(player, name);
 		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);
 	}
 
@@ -108,7 +91,7 @@ public class CommandHandler implements ICommandHandler {
 			return;	
 		}
 		this._allTelePads.remove(info);
-		CommandHandler.telePadRemovedMessage.sendMessage(player, name);
+		Config.M.telePadRemoved.sendMessage(player, name);
 		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);
 	}
 
@@ -135,7 +118,7 @@ public class CommandHandler implements ICommandHandler {
 
 		info1.setTarget(info2.getSourceAsTarget());
 		info2.setTarget(info1.getSourceAsTarget());
-		CommandHandler.telePadsLinkedMessage.sendMessage(player, name1, name2);
+		Config.M.telePadsLinked.sendMessage(player, name1, name2);
 		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);
 	}
 
@@ -154,7 +137,7 @@ public class CommandHandler implements ICommandHandler {
 		}
 		player.teleport(info.getSourceAsTarget());
 		this._controller.coolDown(player);
-		CommandHandler.gotoTelePadMessage.sendMessage(player, name);
+		Config.M.gotoTelePad.sendMessage(player, name);
 	}
 
 	void listCommand(CommandParser commandParser)
