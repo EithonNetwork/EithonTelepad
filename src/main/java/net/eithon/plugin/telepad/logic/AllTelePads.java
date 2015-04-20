@@ -8,9 +8,11 @@ import net.eithon.library.extensions.EithonPlugin;
 import net.eithon.library.json.Converter;
 import net.eithon.library.plugin.Logger.DebugPrintLevel;
 import net.eithon.library.time.TimeMisc;
+import net.eithon.plugin.telepad.Config;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.json.simple.JSONArray;

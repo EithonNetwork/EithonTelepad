@@ -64,6 +64,10 @@ messages:
   # Parameters: NONE
   MovedOffTelePad_0: You moved away from the telepad, cancelling teleport.
 
+  #
+  # Parameters: <telepad name> (%s)
+  UnknownTelePad_1: Unknown telepad (%s).
+
 
 
 
