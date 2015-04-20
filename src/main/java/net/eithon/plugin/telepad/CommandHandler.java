@@ -30,6 +30,7 @@ public class CommandHandler implements ICommandHandler {
 
 	public CommandHandler(EithonPlugin eithonPlugin, Controller controller) {
 		this._controller = controller;
+		this._eithonPlugin = eithonPlugin;
 		this._allTelePads = new AllTelePads(eithonPlugin);
 	}
 
