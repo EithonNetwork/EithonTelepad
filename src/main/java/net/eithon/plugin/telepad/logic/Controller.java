@@ -38,10 +38,9 @@ public class Controller {
 
 	public void maybeTele(Player player, Block pressurePlate) {
 		debug("maybeTele", "Enter");
-		Location location = pressurePlate.getLocation();
-		TelePadInfo info = this._allTelePads.getByLocation(location);
-		if (info == null) {
-			debug("maybeTele", "No telepad found at the location");
+		
+		if (isAboutToTele(player)) {
+			debug("maybeTele", "Player already waiting for teleport to happen");
 			return;
 		}
 
@@ -49,8 +48,11 @@ public class Controller {
 			debug("maybeTele", "Player is in cool down period");
 			return;
 		}
-		if (isAboutToTele(player)) {
-			debug("maybeTele", "Player already waiting for teleport to happenh");
+		
+		Location location = pressurePlate.getLocation();
+		TelePadInfo info = this._allTelePads.getByLocation(location);
+		if (info == null) {
+			debug("maybeTele", "No telepad found at the location");
 			return;
 		}
 		
