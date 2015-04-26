@@ -20,7 +20,7 @@ import org.bukkit.util.Vector;
 
 public class Controller {
 
-	private PlayerCollection<TelePadInfo> _playersAboutToTele = null;
+	private net.eithon.library.core.PlayerCollection<JumperInfo> _playersAboutToTele = null;
 	CoolDown _coolDown = null;
 	private AllTelePads _allTelePads = null;
 	private EithonPlugin _eithonPlugin = null;
@@ -29,7 +29,7 @@ public class Controller {
 		this._eithonPlugin = eithonPlugin;
 		Configuration config = eithonPlugin.getConfiguration();
 		this._coolDown = new CoolDown("telepad", Config.V.secondsToPauseBeforeNextTeleport);
-		this._playersAboutToTele = new PlayerCollection<TelePadInfo>(new TelePadInfo());
+		this._playersAboutToTele = new net.eithon.library.core.PlayerCollection<JumperInfo>();
 		this._allTelePads = new AllTelePads(eithonPlugin);
 		double seconds = config.getDouble("SecondsBeforeLoad", 5.0);
 		this._allTelePads.delayedLoad(eithonPlugin, seconds);
@@ -40,75 +40,61 @@ public class Controller {
 		Location location = pressurePlate.getLocation();
 		TelePadInfo info = this._allTelePads.getByLocation(location);
 		if (info == null) return;
-		
-		/*
-		if (!hasReadRules(player)) {
-			maybeTellPlayerToReadTheRules(player);
-			return;
-		}
-		*/
 		if (isInCoolDownPeriod(player)) return;
 		if (isAboutToTele(player)) return;
-		
+
 		float oldWalkSpeed = stopPlayer(player);
 		teleSoon(player, info, oldWalkSpeed);
 	}
 
 	boolean isAboutToTele(Player player) {
-		return this._playersAboutToTele.hasInformation(player);
-	}
-
-	void setPlayerIsAboutToTele(Player player, TelePadInfo info, boolean isAboutToTele) {
-		if (isAboutToTele) {
-			if (isAboutToTele(player)) return;
-			this._playersAboutToTele.put(player, info);
-		} else {
-			if (!isAboutToTele(player)) return;
-			this._playersAboutToTele.remove(player);
-		}
+		JumperInfo jumperInfo = this._playersAboutToTele.get(player);
+		if (jumperInfo == null) return false;
+		return jumperInfo.isAboutToTele();
 	}
 
 	private void teleSoon(Player player, TelePadInfo info, float oldWalkSpeed) {
 		final float nextWalkSpeed =  (oldWalkSpeed > 0.0F ? oldWalkSpeed : 1.0F);
-		setPlayerIsAboutToTele(player, info, true);
+		JumperInfo jumperInfo = new JumperInfo(player);
+		this._playersAboutToTele.put(player,  jumperInfo);
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
 			nausea = new PotionEffect(PotionEffectType.CONFUSION, (int) Config.V.nauseaTicks, 4);
 			effects.add(nausea);
+			jumperInfo.setNausea(true);
 		}
-		final boolean hasNausea = nausea != null;
 		PotionEffect slowness = null;
 		if (Config.V.nauseaTicks > 0) {
 			slowness = new PotionEffect(PotionEffectType.SLOW, (int) Config.V.slownessTicks, 4);
 			effects.add(slowness);
+			jumperInfo.setSlowness(true);
 		}
-		final boolean hasSlowness = slowness != null;
 		PotionEffect blindness = null;
 		if (Config.V.blindnessTicks > 0) {
 			blindness = new PotionEffect(PotionEffectType.BLINDNESS, (int) Config.V.blindnessTicks, 4);
 			effects.add(blindness);
+			jumperInfo.setBlindness(true);
 		}
-		final boolean hasBlindness = blindness != null;
 		player.addPotionEffects(effects);
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
 				player.setWalkSpeed(nextWalkSpeed);
-				if (hasNausea) player.removePotionEffect(PotionEffectType.CONFUSION);
-				if (hasSlowness) player.removePotionEffect(PotionEffectType.SLOW);
-				if (hasBlindness) player.removePotionEffect(PotionEffectType.BLINDNESS);
+				removeEffects(player, jumperInfo);
 			}
 		}, Config.V.disableEffectsAfterTicks);
-		final Controller instance = this;
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
 				if (!isAboutToTele(player)) return;
-				setPlayerIsAboutToTele(player, info, false);
-				instance.coolDown(player);
-				jumpOrTele(player, info);
+				jumpOrTele(player, info, jumperInfo);
 			}
 		}, Config.V.ticksBeforeTele);
+	}
+
+	void removeEffects(Player player, JumperInfo jumperInfo) {
+		jumperInfo.removeEffects();
+		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
 	}
 
 	private float stopPlayer(Player player) {
@@ -118,22 +104,25 @@ public class Controller {
 		return walkSpeed;
 	}
 
-	void jumpOrTele(Player player, TelePadInfo info) {
+	void jumpOrTele(Player player, TelePadInfo info, JumperInfo jumperInfo) {
+		jumperInfo.setAboutToTele(false);
+		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
+		coolDown(player);
 		if (info.hasVelocity()) jump(player, info);
 		else tele(player, info);
 	}
-	
+
 	private void tele(Player player, TelePadInfo info) {
 		Location targetLocation = info.getTargetLocation();
 		player.teleport(targetLocation);
 	}
-	
+
 	private void jump(Player player, TelePadInfo info) {
 		Vector jumpPadVelocity = info.getVelocity();
 		Vector velocity = new Vector(jumpPadVelocity.getX(), jumpPadVelocity.getY(), jumpPadVelocity.getZ());
 		player.setVelocity(velocity);
 	}
-	
+
 	public void coolDown(Player player) {
 		this._coolDown.addPlayer(player);
 	}
