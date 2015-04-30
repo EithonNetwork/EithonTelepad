@@ -1,6 +1,7 @@
 package net.eithon.plugin.telepad;
 
 import net.eithon.library.extensions.EithonPlugin;
+import net.eithon.library.move.IBlockMoverFollower;
 import net.eithon.plugin.telepad.logic.Controller;
 
 import org.bukkit.Material;
@@ -14,6 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 public final class EventListener implements Listener {
 	
 	private net.eithon.plugin.telepad.logic.Controller _controller;
+	
 	public EventListener(EithonPlugin eithonPlugin, Controller controller) {
 		this._controller = controller;
 	}

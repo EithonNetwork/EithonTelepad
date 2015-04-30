@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import net.eithon.library.extensions.EithonPlugin;
 import net.eithon.library.json.PlayerCollection;
+import net.eithon.library.move.IBlockMoverFollower;
+import net.eithon.library.move.MoveEventHandler;
 import net.eithon.library.plugin.Configuration;
 import net.eithon.library.time.CoolDown;
 import net.eithon.plugin.telepad.Config;
@@ -13,12 +15,13 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
-public class Controller {
+public class Controller implements IBlockMoverFollower {
 
 	private net.eithon.library.core.PlayerCollection<JumperInfo> _playersAboutToTele = null;
 	CoolDown _coolDown = null;
@@ -57,6 +60,8 @@ public class Controller {
 		final float nextWalkSpeed =  (oldWalkSpeed > 0.0F ? oldWalkSpeed : 1.0F);
 		JumperInfo jumperInfo = new JumperInfo(player);
 		this._playersAboutToTele.put(player,  jumperInfo);
+		MoveEventHandler.addBlockMover(player, this);
+		
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
@@ -107,6 +112,7 @@ public class Controller {
 	void jumpOrTele(Player player, TelePadInfo info, JumperInfo jumperInfo) {
 		jumperInfo.setAboutToTele(false);
 		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
+		MoveEventHandler.removeBlockMover(player, this);
 		coolDown(player);
 		if (info.hasVelocity()) jump(player, info);
 		else tele(player, info);
@@ -129,5 +135,22 @@ public class Controller {
 
 	public boolean isInCoolDownPeriod(Player player) {
 		return this._coolDown.isInCoolDownPeriod(player);
+	}
+
+	@Override
+	public void moveEventHandler(PlayerMoveEvent event) {
+		Player player = event.getPlayer();
+		JumperInfo jumperInfo = this._playersAboutToTele.get(player);
+		if ((jumperInfo == null) || !jumperInfo.isAboutToTele()) {
+			return;
+		}
+		jumperInfo.setAboutToTele(false);
+		removeEffects(player, jumperInfo);
+		// TODO: Inform player about change of plans
+	}
+
+	@Override
+	public String getName() {
+		return this._eithonPlugin.getName();
 	}
 }
