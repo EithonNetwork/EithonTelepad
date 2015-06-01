@@ -30,6 +30,8 @@ public class CommandHandler implements ICommandHandler {
 
 	public CommandHandler(EithonPlugin eithonPlugin, Controller controller) {
 		this._controller = controller;
+		this._eithonPlugin = eithonPlugin;
+		this._allTelePads = new AllTelePads(eithonPlugin);
 	}
 
 	void disable() {
@@ -42,7 +44,7 @@ public class CommandHandler implements ICommandHandler {
 		Player player = commandParser.getPlayerOrInformSender();
 		if (player == null) return true;
 
-		String command = commandParser.getArgumentStringAsLowercase(0);
+		String command = commandParser.getArgumentCommand();
 		if (command.equals("add")) {
 			addCommand(commandParser);
 		} else if (command.equals("link")) {
@@ -66,7 +68,7 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasPermissionOrInformSender("telepad.add")) return;
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 2)) return;
 
-		String name =commandParser.getArgumentStringAsLowercase(1);
+		String name =commandParser.getArgumentStringAsLowercase();
 		Player player = commandParser.getPlayer();
 		if (!verifyNameIsNew(player, name)) return;	
 
@@ -86,19 +88,22 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasPermissionOrInformSender("telepad.velocity")) return;
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(3, 4)) return;
 
-		String name =commandParser.getArgumentStringAsLowercase(1);
+		String name =commandParser.getArgumentStringAsLowercase();
 		Player player = commandParser.getPlayer();
-		TelePadInfo info = this._allTelePads.getByName(name);
-		if (info == null)
-		{
-			player.sendMessage("Unknown telepad: " + name);
-			return;	
-		}
+		TelePadInfo info = getByNameOrInformUser(player, name);
+		if (info == null) return;
 
-		double upSpeed = commandParser.getArgumentDouble(2, 0.0);
-		double forwardSpeed = commandParser.getArgumentDouble(3, 0.0);
+		double upSpeed = commandParser.getArgumentDouble(0.0);
+		double forwardSpeed = commandParser.getArgumentDouble(0.0);
 
 		createOrUpdateTelePad(player, name, upSpeed, forwardSpeed);
+	}
+
+	private TelePadInfo getByNameOrInformUser(CommandSender sender, String name) {
+		TelePadInfo info = this._allTelePads.getByName(name);
+		if (info != null) return info;
+		Config.M.unknownTelePad.sendMessage(sender, name);
+		return null;
 	}
 
 	void removeCommand(CommandParser commandParser)
@@ -107,13 +112,10 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 2)) return;
 
 		Player player = commandParser.getPlayer();
-		String name =commandParser.getArgumentStringAsLowercase(1);
-		TelePadInfo info = this._allTelePads.getByName(name);
-		if (info == null)
-		{
-			player.sendMessage("Unknown telepad: " + name);
-			return;	
-		}
+		String name =commandParser.getArgumentStringAsLowercase();
+		TelePadInfo info = getByNameOrInformUser(player, name);
+		if (info == null) return;
+
 		this._allTelePads.remove(info);
 		Config.M.telePadRemoved.sendMessage(player, name);
 		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);
@@ -125,20 +127,12 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(3, 3)) return;
 
 		Player player = commandParser.getPlayer();
-		String name1 = commandParser.getArgumentStringAsLowercase(1);
-		TelePadInfo info1 = this._allTelePads.getByName(name1);
-		if (info1 == null)
-		{
-			player.sendMessage("Unknown telepad: " + name1);
-			return;	
-		}
-		String name2 = commandParser.getArgumentStringAsLowercase(2);
-		TelePadInfo info2 = this._allTelePads.getByName(name2);
-		if (info2 == null)
-		{
-			player.sendMessage("Unknown telepad: " + name2);
-			return;	
-		}
+		String name1 = commandParser.getArgumentStringAsLowercase();
+		TelePadInfo info1 = getByNameOrInformUser(player, name1);
+		if (info1 == null) return;
+		String name2 = commandParser.getArgumentStringAsLowercase();
+		TelePadInfo info2 = getByNameOrInformUser(player, name2);
+		if (info2 == null) return;
 
 		info1.setTarget(info2.getSourceAsTarget());
 		info2.setTarget(info1.getSourceAsTarget());
@@ -152,13 +146,10 @@ public class CommandHandler implements ICommandHandler {
 		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 2)) return;
 
 		Player player = commandParser.getPlayer();
-		String name =commandParser.getArgumentStringAsLowercase(1);
-		TelePadInfo info = this._allTelePads.getByName(name);
-		if (info == null)
-		{
-			player.sendMessage("Unknown telepad: " + name);
-			return;			
-		}
+		String name =commandParser.getArgumentStringAsLowercase();
+		TelePadInfo info = getByNameOrInformUser(player, name);
+		if (info == null) return;
+
 		player.teleport(info.getSourceAsTarget());
 		this._controller.coolDown(player);
 		Config.M.gotoTelePad.sendMessage(player, name);
