@@ -3,7 +3,6 @@ package net.eithon.plugin.telepad.logic;
 import java.util.ArrayList;
 
 import net.eithon.library.extensions.EithonPlugin;
-import net.eithon.library.json.PlayerCollection;
 import net.eithon.library.move.IBlockMoverFollower;
 import net.eithon.library.move.MoveEventHandler;
 import net.eithon.library.plugin.Configuration;
@@ -168,7 +167,7 @@ public class Controller implements IBlockMoverFollower {
 		if (!isAboutToTele(player)) return;
 		Block block = player.getLocation().getBlock();
 		if ((block != null) && (block.getType() == Material.STONE_PLATE)) return;
-		setPlayerIsAboutToTele(player, null, false);
+		this._playersAboutToTele.remove(player);
 		Config.M.movedOffTelePad.sendMessage(player);
 	}
 

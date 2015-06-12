@@ -1,7 +1,6 @@
 package net.eithon.plugin.telepad;
 
 import net.eithon.library.extensions.EithonPlugin;
-import net.eithon.library.move.IBlockMoverFollower;
 import net.eithon.library.plugin.Logger.DebugPrintLevel;
 import net.eithon.plugin.telepad.logic.Controller;
 
