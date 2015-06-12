@@ -7,6 +7,7 @@ import net.eithon.library.json.PlayerCollection;
 import net.eithon.library.move.IBlockMoverFollower;
 import net.eithon.library.move.MoveEventHandler;
 import net.eithon.library.plugin.Configuration;
+import net.eithon.library.plugin.Logger.DebugPrintLevel;
 import net.eithon.library.time.CoolDown;
 import net.eithon.plugin.telepad.Config;
 
@@ -39,15 +40,26 @@ public class Controller implements IBlockMoverFollower {
 	}
 
 	public void maybeTele(Player player, Block pressurePlate) {
-		if (pressurePlate.getType() != Material.STONE_PLATE) return;
+		debug("maybeTele", "Enter");
+		
+		if (isAboutToTele(player)) {
+			debug("maybeTele", "Player already waiting for teleport to happen");
+			return;
+		}
+
+		if (isInCoolDownPeriod(player)) {
+			debug("maybeTele", "Player is in cool down period");
+			return;
+		}
+		
 		Location location = pressurePlate.getLocation();
 		TelePadInfo info = this._allTelePads.getByLocation(location);
 		if (info == null) return;
 		if (isInCoolDownPeriod(player)) return;
 		if (isAboutToTele(player)) return;
 
-		float oldWalkSpeed = stopPlayer(player);
-		teleSoon(player, info, oldWalkSpeed);
+		debug("maybeTele", "Teleport sequence is starting");
+		teleSoon(player, info);
 	}
 
 	boolean isAboutToTele(Player player) {
@@ -56,8 +68,8 @@ public class Controller implements IBlockMoverFollower {
 		return jumperInfo.isAboutToTele();
 	}
 
-	private void teleSoon(Player player, TelePadInfo info, float oldWalkSpeed) {
-		final float nextWalkSpeed =  (oldWalkSpeed > 0.0F ? oldWalkSpeed : 1.0F);
+	private void teleSoon(Player player, TelePadInfo info) {
+		debug("teleSoon", "Enter");
 		JumperInfo jumperInfo = new JumperInfo(player);
 		this._playersAboutToTele.put(player,  jumperInfo);
 		MoveEventHandler.addBlockMover(player, this);
@@ -65,18 +77,21 @@ public class Controller implements IBlockMoverFollower {
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
+			debug("teleSoon", "Add nausea");
 			nausea = new PotionEffect(PotionEffectType.CONFUSION, (int) Config.V.nauseaTicks, 4);
 			effects.add(nausea);
 			jumperInfo.setNausea(true);
 		}
 		PotionEffect slowness = null;
 		if (Config.V.nauseaTicks > 0) {
+			debug("teleSoon", "Add slowness");
 			slowness = new PotionEffect(PotionEffectType.SLOW, (int) Config.V.slownessTicks, 4);
 			effects.add(slowness);
 			jumperInfo.setSlowness(true);
 		}
 		PotionEffect blindness = null;
 		if (Config.V.blindnessTicks > 0) {
+			debug("teleSoon", "Add blindness");
 			blindness = new PotionEffect(PotionEffectType.BLINDNESS, (int) Config.V.blindnessTicks, 4);
 			effects.add(blindness);
 			jumperInfo.setBlindness(true);
@@ -85,13 +100,18 @@ public class Controller implements IBlockMoverFollower {
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
-				player.setWalkSpeed(nextWalkSpeed);
+				debug("teleSoon (delayed1)", "Remove effects");
 				removeEffects(player, jumperInfo);
 			}
 		}, Config.V.disableEffectsAfterTicks);
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
-				if (!isAboutToTele(player)) return;
+				debug("teleSoon (delayed2)", "Last chance to change our mind");
+				if (!isAboutToTele(player)) {
+					debug("teleSoon (delayed2)", "The teleport seems to have been cancelled");
+					return;
+				}
+				debug("teleSoon (delayed2)", "Mark the player for teleportation");
 				jumpOrTele(player, info, jumperInfo);
 			}
 		}, Config.V.ticksBeforeTele);
@@ -114,8 +134,15 @@ public class Controller implements IBlockMoverFollower {
 		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
 		MoveEventHandler.removeBlockMover(player, this);
 		coolDown(player);
-		if (info.hasVelocity()) jump(player, info);
-		else tele(player, info);
+		debug("jumpOrTele", "Enter");
+		if (info.hasVelocity()) {
+			debug("jumpOrTele", "JUMP!");
+			jump(player, info);
+		}
+		else {
+			debug("jumpOrTele", "TELEPORT!");
+			tele(player, info);
+		}
 	}
 
 	private void tele(Player player, TelePadInfo info) {
@@ -135,6 +162,18 @@ public class Controller implements IBlockMoverFollower {
 
 	public boolean isInCoolDownPeriod(Player player) {
 		return this._coolDown.isInCoolDownPeriod(player);
+	}
+
+	public void maybeStopTele(Player player) {
+		if (!isAboutToTele(player)) return;
+		Block block = player.getLocation().getBlock();
+		if ((block != null) && (block.getType() == Material.STONE_PLATE)) return;
+		setPlayerIsAboutToTele(player, null, false);
+		Config.M.movedOffTelePad.sendMessage(player);
+	}
+
+	void debug(String method, String message) {
+		this._eithonPlugin.getEithonLogger().debug(DebugPrintLevel.VERBOSE, "%s: %s", method, message);
 	}
 
 	@Override
