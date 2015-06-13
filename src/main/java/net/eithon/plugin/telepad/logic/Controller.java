@@ -3,7 +3,8 @@ package net.eithon.plugin.telepad.logic;
 import java.util.ArrayList;
 
 import net.eithon.library.extensions.EithonPlugin;
-import net.eithon.library.json.PlayerCollection;
+import net.eithon.library.move.IBlockMoverFollower;
+import net.eithon.library.move.MoveEventHandler;
 import net.eithon.library.plugin.Configuration;
 import net.eithon.library.plugin.Logger.DebugPrintLevel;
 import net.eithon.library.time.CoolDown;
@@ -14,12 +15,13 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
-public class Controller {
+public class Controller implements IBlockMoverFollower {
 
 	private net.eithon.library.core.PlayerCollection<JumperInfo> _playersAboutToTele = null;
 	CoolDown _coolDown = null;
@@ -69,6 +71,8 @@ public class Controller {
 		debug("teleSoon", "Enter");
 		JumperInfo jumperInfo = new JumperInfo(player);
 		this._playersAboutToTele.put(player,  jumperInfo);
+		MoveEventHandler.addBlockMover(player, this);
+		
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
@@ -127,6 +131,7 @@ public class Controller {
 	void jumpOrTele(Player player, TelePadInfo info, JumperInfo jumperInfo) {
 		jumperInfo.setAboutToTele(false);
 		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
+		MoveEventHandler.removeBlockMover(player, this);
 		coolDown(player);
 		debug("jumpOrTele", "Enter");
 		if (info.hasVelocity()) {
@@ -162,11 +167,28 @@ public class Controller {
 		if (!isAboutToTele(player)) return;
 		Block block = player.getLocation().getBlock();
 		if ((block != null) && (block.getType() == Material.STONE_PLATE)) return;
-		setPlayerIsAboutToTele(player, null, false);
+		this._playersAboutToTele.remove(player);
 		Config.M.movedOffTelePad.sendMessage(player);
 	}
 
 	void debug(String method, String message) {
 		this._eithonPlugin.getEithonLogger().debug(DebugPrintLevel.VERBOSE, "%s: %s", method, message);
+	}
+
+	@Override
+	public void moveEventHandler(PlayerMoveEvent event) {
+		Player player = event.getPlayer();
+		JumperInfo jumperInfo = this._playersAboutToTele.get(player);
+		if ((jumperInfo == null) || !jumperInfo.isAboutToTele()) {
+			return;
+		}
+		jumperInfo.setAboutToTele(false);
+		removeEffects(player, jumperInfo);
+		// TODO: Inform player about change of plans
+	}
+
+	@Override
+	public String getName() {
+		return this._eithonPlugin.getName();
 	}
 }

@@ -17,6 +17,7 @@ public final class EventListener implements Listener {
 	
 	private Controller _controller;
 	private EithonPlugin _eithonPlugin;
+	
 	public EventListener(EithonPlugin eithonPlugin, Controller controller) {
 		this._controller = controller;
 		this._eithonPlugin = eithonPlugin;
