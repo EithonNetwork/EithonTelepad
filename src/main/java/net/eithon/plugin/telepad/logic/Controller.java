@@ -54,8 +54,6 @@ public class Controller implements IBlockMoverFollower {
 		Location location = pressurePlate.getLocation();
 		TelePadInfo info = this._allTelePads.getByLocation(location);
 		if (info == null) return;
-		if (isInCoolDownPeriod(player)) return;
-		if (isAboutToTele(player)) return;
 
 		debug("maybeTele", "Teleport sequence is starting");
 		teleSoon(player, info);

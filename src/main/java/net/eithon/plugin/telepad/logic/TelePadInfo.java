@@ -180,6 +180,6 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 	}
 
 	public String toString() {
-		return String.format("%s (%s): from %s toy %s", getTelePadName(), getName(), getSource().getBlock().toString(), getTargetLocation().toString());
+		return String.format("%s (%s): from %s to %s", getTelePadName(), getName(), getSource().getBlock().toString(), getTargetLocation().toString());
 	}
 }

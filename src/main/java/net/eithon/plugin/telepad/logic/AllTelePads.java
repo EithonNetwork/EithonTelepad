@@ -31,8 +31,8 @@ public class AllTelePads {
 	}
 	
 	public void add(TelePadInfo info) {
-		this.telePadsByBlock.put(info.getBlockHash(), info);
 		this.telePadsByName.put(info.getTelePadName(), info);
+		this.telePadsByBlock.put(info.getBlockHash(), info);
 	}
 
 	public void remove(TelePadInfo info) {
@@ -53,10 +53,14 @@ public class AllTelePads {
 		String position = TelePadInfo.toBlockHash(location);
 		if (!this.telePadsByBlock.containsKey(position)) {
 			debug("AllTelePads.getByLocation", "No telepads at position " + position);
+			for (TelePadInfo info : this.telePadsByBlock.values()) {
+				debug("AllTelePads.getByLocation", String.format("Telepad: %s", info.toString()));
+			}
 			return null;
 		}
-		debug("AllTelePads.getByLocation", "Found a telepad.");
-		return this.telePadsByBlock.get(position);
+		TelePadInfo info = this.telePadsByBlock.get(position);
+		debug("AllTelePads.getByLocation", String.format("Found a telepad: %s.", info.toString()));
+		return info;
 	}
 
 	public TelePadInfo getByName(String name) {
