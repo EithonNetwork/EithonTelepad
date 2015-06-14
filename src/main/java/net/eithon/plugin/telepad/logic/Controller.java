@@ -202,12 +202,26 @@ public class Controller implements IBlockMoverFollower {
 		return this._coolDown.isInCoolDownPeriod(player);
 	}
 
-	public void maybeStopTele(Player player) {
-		if (!isAboutToTele(player)) return;
+	public boolean maybeStopTele(Player player) {
+		debug("maybeStopTele", String.format("Enter (for player %s)", player.getName()));
+		JumperInfo jumperInfo = this._playersAboutToTele.get(player);
+		if ((jumperInfo == null) || !jumperInfo.isAboutToTele()) {
+			debug("maybeStopTele", "User is not about to jump.");
+			debug("maybeStopTele", "Leave");
+			return false;
+		}
 		Block block = player.getLocation().getBlock();
-		if ((block != null) && (block.getType() == Material.STONE_PLATE)) return;
+		if ((block != null) && (block.getType() == Material.STONE_PLATE)) {
+			debug("maybeStopTele", "User is still on stone plate.");
+			debug("maybeStopTele", "Leave");
+			return false;
+		}
+		jumperInfo.setAboutToTele(false);
+		removeEffects(player, jumperInfo);
 		this._playersAboutToTele.remove(player);
 		Config.M.movedOffTelePad.sendMessage(player);
+		debug("maybeStopTele", "Leave");
+		return true;
 	}
 
 	void debug(String method, String message) {
@@ -217,13 +231,12 @@ public class Controller implements IBlockMoverFollower {
 	@Override
 	public void moveEventHandler(PlayerMoveEvent event) {
 		Player player = event.getPlayer();
-		JumperInfo jumperInfo = this._playersAboutToTele.get(player);
-		if ((jumperInfo == null) || !jumperInfo.isAboutToTele()) {
-			return;
+		debug("TelePad.moveEventHandler", String.format("Enter (for player %s)", player.getName()));
+		if (maybeStopTele(player)) {
+			debug("TelePad.moveEventHandler", String.format("Stop following player %s", player.getName()));
+			MoveEventHandler.removeBlockMover(player, this);
 		}
-		jumperInfo.setAboutToTele(false);
-		removeEffects(player, jumperInfo);
-		// TODO: Inform player about change of plans
+		debug("TelePad.moveEventHandler", "Leave");
 	}
 
 	public TelePadInfo getByNameOrInformUser(CommandSender sender, String name) {
