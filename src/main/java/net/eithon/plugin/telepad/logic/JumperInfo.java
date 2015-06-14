@@ -1,9 +1,12 @@
 package net.eithon.plugin.telepad.logic;
 
+import java.util.UUID;
+
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
 public class JumperInfo {
+	private UUID _id;
 	private boolean _nausea;
 	private boolean _slowness;
 	private boolean _blindness;
@@ -14,6 +17,11 @@ public class JumperInfo {
 	public JumperInfo(Player player) {
 		this._player = player;
 		this._aboutToTele = true;
+		this._id = UUID.randomUUID();
+	}
+	
+	public boolean isSame(JumperInfo info) {
+		return (info != null) && (info._id == this._id);
 	}
 
 	public boolean hasNausea() {
