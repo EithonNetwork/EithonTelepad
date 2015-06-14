@@ -25,7 +25,7 @@ import org.bukkit.util.Vector;
 
 public class Controller implements IBlockMoverFollower {
 
-	private net.eithon.library.core.PlayerCollection<JumperInfo> _playersAboutToTele = null;
+	net.eithon.library.core.PlayerCollection<JumperInfo> _playersAboutToTele = null;
 	CoolDown _coolDown = null;
 	private AllTelePads _allTelePads = null;
 	private EithonPlugin _eithonPlugin = null;
@@ -111,7 +111,12 @@ public class Controller implements IBlockMoverFollower {
 		JumperInfo jumperInfo = new JumperInfo(player);
 		this._playersAboutToTele.put(player,  jumperInfo);
 		MoveEventHandler.addBlockMover(player, this);
+		addPotionEffects(player, jumperInfo);
+		delayedRemoveEffects(player, jumperInfo);
+		delayedTeleport(player, info, jumperInfo);
+	}
 
+	private void addPotionEffects(Player player, JumperInfo jumperInfo) {
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
@@ -135,21 +140,44 @@ public class Controller implements IBlockMoverFollower {
 			jumperInfo.setBlindness(true);
 		}
 		player.addPotionEffects(effects);
+	}
+
+	private void delayedRemoveEffects(
+			Player player,
+			JumperInfo jumperInfo) {
+		Controller thisController = this;
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
-				debug("teleSoon (delayed1)", "Remove effects");
+				JumperInfo latestJumperInfo = thisController._playersAboutToTele.get(player);
+				if (!jumperInfo.isSame(latestJumperInfo)){
+					debug("delayedRemoveEffects", "There seems to exist a new teleport. Skip this.");
+					return;
+				}				debug("delayedRemoveEffects", "Remove effects");
 				removeEffects(player, jumperInfo);
 			}
 		}, Config.V.disableEffectsAfterTicks);
+	}
+
+	private void delayedTeleport(
+			Player player, 
+			TelePadInfo info,
+			JumperInfo jumperInfo) {
+		Controller thisController = this;
+		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
-				debug("teleSoon (delayed2)", "Last chance to change our mind");
-				if (!isAboutToTele(player)) {
-					debug("teleSoon (delayed2)", "The teleport seems to have been cancelled");
+				JumperInfo latestJumperInfo = thisController._playersAboutToTele.get(player);
+				if (!jumperInfo.isSame(latestJumperInfo)){
+					debug("delayedTeleport", "There seems to exist a new teleport. Skip this.");
 					return;
 				}
-				debug("teleSoon (delayed2)", "Mark the player for teleportation");
+				debug("delayedTeleport", "Last chance to change our mind");
+				if (!isAboutToTele(player)) {
+					debug("delayedTeleport", "The teleport seems to have been cancelled");
+					return;
+				}
+				debug("delayedTeleport", "Mark the player for teleportation");
 				jumpOrTele(player, info, jumperInfo);
 			}
 		}, Config.V.ticksBeforeTele);
