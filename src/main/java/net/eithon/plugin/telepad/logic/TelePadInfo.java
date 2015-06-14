@@ -2,52 +2,48 @@ package net.eithon.plugin.telepad.logic;
 
 import java.util.UUID;
 
-import net.eithon.library.core.IUuidAndName;
+import net.eithon.library.extensions.EithonLocation;
+import net.eithon.library.extensions.EithonPlayer;
 import net.eithon.library.json.Converter;
 import net.eithon.library.json.IJson;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.json.simple.JSONObject;
 
-public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
-	private Location _sourceLocation;
-	private Location _targetLocation;
+public class TelePadInfo implements IJson<TelePadInfo> {
+	private EithonLocation _sourceLocation;
+	private EithonLocation _targetLocation;
 	private Vector _velocity;
 	private String _telePadName;
-	private UUID _creatorId;
-	private String _creatorName;
+	private EithonPlayer _creator;
 	private boolean _hasVelocity;
 
 	private TelePadInfo(String name, Location sourceLocation, Player creator)
 	{
 		this._telePadName = name;
-		this._sourceLocation = sourceLocation;
+		this._sourceLocation = new EithonLocation(sourceLocation);
 		if (creator != null)
 		{
-			this._creatorId = creator.getUniqueId();
-			this._creatorName = creator.getName();
+			this._creator = new EithonPlayer(creator);
 		} else {
-			this._creatorId = null;
-			this._creatorName = null;
+			this._creator = null;
 		}
 	}
 
 	TelePadInfo(String name, Location sourceLocation, UUID creatorId, String creatorName)
 	{
 		this._telePadName = name;
-		this._sourceLocation = sourceLocation;
-		this._creatorId = creatorId;
-		this._creatorName = creatorName;
+		this._sourceLocation = new EithonLocation(sourceLocation);
+		this._creator = new EithonPlayer(creatorId, creatorName);
 	}
 
 	public TelePadInfo(String name, Location sourceLocation, Location targetLocation, Player creator)
 	{
 		this(name, sourceLocation, creator);
-		this._targetLocation = targetLocation;
+		this._targetLocation = new EithonLocation(targetLocation);
 		this._hasVelocity = false;
 	}
 
@@ -61,7 +57,7 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 	TelePadInfo(String name, Location sourceLocation, Location targetLocation, UUID creatorId, String creatorName)
 	{
 		this(name, sourceLocation, creatorId, creatorName);
-		this._targetLocation = targetLocation;
+		this._targetLocation = new EithonLocation(targetLocation);
 		this._hasVelocity = false;
 	}
 
@@ -83,37 +79,42 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 	}
 
 	@Override
-	public void fromJson(Object json) {
+	public TelePadInfo fromJson(Object json) {
 		JSONObject jsonObject = (JSONObject) json;
 		this._telePadName = (String) jsonObject.get("name");
-		this._sourceLocation = Converter.toLocation((JSONObject)jsonObject.get("sourceLocation"), null);
+		this._sourceLocation = EithonLocation.getFromJson(jsonObject.get("sourceLocation"));
 		this._hasVelocity = (boolean) jsonObject.get("hasVelocity");
 		if (this._hasVelocity) {
 			this._velocity = Converter.toVector((JSONObject)jsonObject.get("velocity"));
 		} else {
-			this._targetLocation = Converter.toLocation((JSONObject)jsonObject.get("targetLocation"), null);
+			this._targetLocation = EithonLocation.getFromJson(jsonObject.get("targetLocation"));
 		}
-		this._creatorId = Converter.toPlayerId((JSONObject) jsonObject.get("creator"));
-		this._creatorName= Converter.toPlayerName((JSONObject) jsonObject.get("creator"));
+		this._creator = EithonPlayer.getFromJSon(jsonObject.get("creator"));
+		return this;
+	}
+	
+	public static TelePadInfo createFromJson(Object json) {
+		TelePadInfo info = new TelePadInfo();
+		return info.fromJson(json);
 	}
 
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject json = new JSONObject();
 		json.put("name", this._telePadName);
-		json.put("sourceLocation", Converter.fromLocation(this._sourceLocation, true));
+		json.put("sourceLocation", this._sourceLocation.toJson());
 		json.put("hasVelocity", this._hasVelocity);
 		if (this._hasVelocity) {
 			json.put("velocity", Converter.fromVector(this._velocity));
 		} else {
-			json.put("targetLocation", Converter.fromLocation(this._targetLocation, true));
+			json.put("targetLocation", this._targetLocation.toJson());
 		}
-		json.put("creator", Converter.fromPlayer(this._creatorId, this._creatorName));
+		json.put("creator", this._creator.toJson());
 		return json;
 	}
 
 	Location getTargetLocation() {
-		return this._targetLocation;
+		return this._targetLocation.getLocation();
 	}
 
 	Vector getVelocity() {
@@ -121,7 +122,7 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 	}
 
 	public void setTarget(Location location) {
-		this._targetLocation = location;
+		this._targetLocation = new EithonLocation(location);
 	}
 
 	public void setVelocity(Vector velocity) {
@@ -133,11 +134,11 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 	}
 
 	Location getSource() {
-		return this._sourceLocation;
+		return this._sourceLocation.getLocation();
 	}
 
 	public Location getSourceAsTarget() {
-		Location location = this._sourceLocation.clone();
+		Location location = this._sourceLocation.getLocation().clone();
 		location.setX(location.getX() + 0.5);
 		location.setZ(location.getZ() + 0.5);
 		return location;
@@ -145,6 +146,12 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 
 	String getBlockHash() {
 		return TelePadInfo.toBlockHash(this._sourceLocation);
+	}
+
+	private static String toBlockHash(EithonLocation location)
+	{
+		if (location == null) return null;
+		return toBlockHash(location.getLocation());
 	}
 
 	static String toBlockHash(Location location)
@@ -160,18 +167,14 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 
 	Player getCreator()
 	{
-		return Bukkit.getServer().getPlayer(this._creatorId);
+		return this._creator.getPlayer();
 	}
 
-	public String getName() {
-		return this._creatorName;
-	}
-
-	public UUID getUniqueId() {
-		return this._creatorId;
+	public String getPlayerName() {
+		return this._creator.getName();
 	}
 
 	public String toString() {
-		return String.format("%s (%s): from %s toy %s", getTelePadName(), getName(), getSource().getBlock().toString(), getTargetLocation().toString());
+		return String.format("%s (%s): from %s to %s", getTelePadName(), getPlayerName(), getSource().getBlock().toString(), getTargetLocation().toString());
 	}
 }

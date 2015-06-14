@@ -1,4 +1,13 @@
 #
+# Debug level
+#	0 = NONE (no debug messages)
+#	1 = MAJOR (only major messages)
+#	2 = MINOR (also minor messages)
+#	3 = VERBOSE (all messages)
+#
+EithonDebugLevel: 1
+
+#
 # The time that Nausea is active from the time when the user activates the TelePad
 #
 NauseaTicks: 200
@@ -22,16 +31,6 @@ DisableEffectsAfterTicks: 120
 # From the time when the user activates the TelePad, how long until we actually TelePad
 #
 TeleportAfterTicks: 100
-
-#
-# Debug level
-#	0 = NONE (no debug messages)
-#	1 = MAJOR (only major messages)
-#	2 = MINOR (also minor messages)
-#	3 = VERBOSE (all messages)
-#
-EithonDebugLevel: 0
-
 
 #
 # The time to wait before we load the telepad data from file
