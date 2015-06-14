@@ -19,53 +19,56 @@ import org.json.simple.JSONObject;
 
 public class AllTelePads {
 
-	private HashMap<String, TelePadInfo> telePadsByBlock = null;
-	private HashMap<String, TelePadInfo> telePadsByName = null;
+	private HashMap<String, TelePadInfo> _telePadsByBlock = null;
+	private HashMap<String, TelePadInfo> _telePadsByName = null;
 
 	private EithonPlugin _eithonPlugin;
 
 	public AllTelePads(EithonPlugin eithonPlugin) {
 		this._eithonPlugin = eithonPlugin;
-		this.telePadsByBlock = new HashMap<String, TelePadInfo>();
-		this.telePadsByName = new HashMap<String, TelePadInfo>();
+		this._telePadsByBlock = new HashMap<String, TelePadInfo>();
+		this._telePadsByName = new HashMap<String, TelePadInfo>();
 	}
 	
 	public void add(TelePadInfo info) {
-		this.telePadsByName.put(info.getTelePadName(), info);
-		this.telePadsByBlock.put(info.getBlockHash(), info);
+		this._telePadsByName.put(info.getTelePadName(), info);
+		this._telePadsByBlock.put(info.getBlockHash(), info);
 	}
 
 	public void remove(TelePadInfo info) {
-		this.telePadsByName.remove(info.getTelePadName());
-		this.telePadsByBlock.remove(info.getBlockHash());
+		this._telePadsByName.remove(info.getTelePadName());
+		this._telePadsByBlock.remove(info.getBlockHash());
 	}
 
 	public Collection<TelePadInfo> getAll() {
-		return this.telePadsByName.values();
+		return this._telePadsByName.values();
 	}
 
 	TelePadInfo getByLocation(Location location) {
 		debug("AllTelePads.getByLocation", "Enter");
-		if (this.telePadsByBlock == null) {
+		if (this._telePadsByBlock == null) {
 			debug("AllTelePads.getByLocation", "telePadsByBlock == null");
 			return null;
 		}
 		String position = TelePadInfo.toBlockHash(location);
-		if (!this.telePadsByBlock.containsKey(position)) {
+		if (!this._telePadsByBlock.containsKey(position)) {
 			debug("AllTelePads.getByLocation", "No telepads at position " + position);
-			for (TelePadInfo info : this.telePadsByBlock.values()) {
-				debug("AllTelePads.getByLocation", String.format("Telepad: %s", info.toString()));
+			for (TelePadInfo info : this._telePadsByBlock.values()) {
+				debug("AllTelePads.getByLocation", String.format("Telepad by block: %s", info.toString()));
+			}
+			for (TelePadInfo info : this._telePadsByName.values()) {
+				debug("AllTelePads.getByLocation", String.format("Telepad by name: %s", info.toString()));
 			}
 			return null;
 		}
-		TelePadInfo info = this.telePadsByBlock.get(position);
+		TelePadInfo info = this._telePadsByBlock.get(position);
 		debug("AllTelePads.getByLocation", String.format("Found a telepad: %s.", info.toString()));
 		return info;
 	}
 
 	public TelePadInfo getByName(String name) {
-		if (!this.telePadsByName.containsKey(name)) return null;
-		return this.telePadsByName.get(name);
+		if (!this._telePadsByName.containsKey(name)) return null;
+		return this._telePadsByName.get(name);
 	}
 
 	public void delayedSave(JavaPlugin plugin, double seconds)
@@ -124,8 +127,8 @@ public class AllTelePads {
 			return;
 		}
 		this._eithonPlugin.getEithonLogger().info("Restoring %d TelePads from loaded file.", array.size());
-		this.telePadsByBlock = new HashMap<String, TelePadInfo>();
-		this.telePadsByName = new HashMap<String, TelePadInfo>();
+		this._telePadsByBlock = new HashMap<String, TelePadInfo>();
+		this._telePadsByName = new HashMap<String, TelePadInfo>();
 		for (int i = 0; i < array.size(); i++) {
 			TelePadInfo info = new TelePadInfo();
 			info.fromJson((JSONObject) array.get(i));

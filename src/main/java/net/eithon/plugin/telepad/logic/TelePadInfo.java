@@ -2,7 +2,6 @@ package net.eithon.plugin.telepad.logic;
 
 import java.util.UUID;
 
-import net.eithon.library.core.IUuidAndName;
 import net.eithon.library.extensions.EithonLocation;
 import net.eithon.library.extensions.EithonPlayer;
 import net.eithon.library.json.Converter;
@@ -14,7 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.json.simple.JSONObject;
 
-public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
+public class TelePadInfo implements IJson<TelePadInfo> {
 	private EithonLocation _sourceLocation;
 	private EithonLocation _targetLocation;
 	private Vector _velocity;
@@ -171,15 +170,11 @@ public class TelePadInfo implements IJson<TelePadInfo>, IUuidAndName {
 		return this._creator.getPlayer();
 	}
 
-	public String getName() {
+	public String getPlayerName() {
 		return this._creator.getName();
 	}
 
-	public UUID getUniqueId() {
-		return this._creator.getUniqueId();
-	}
-
 	public String toString() {
-		return String.format("%s (%s): from %s to %s", getTelePadName(), getName(), getSource().getBlock().toString(), getTargetLocation().toString());
+		return String.format("%s (%s): from %s to %s", getTelePadName(), getPlayerName(), getSource().getBlock().toString(), getTargetLocation().toString());
 	}
 }

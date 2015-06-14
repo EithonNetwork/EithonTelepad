@@ -2,6 +2,7 @@ package net.eithon.plugin.telepad.logic;
 
 import java.util.ArrayList;
 
+import net.eithon.library.extensions.EithonLocation;
 import net.eithon.library.extensions.EithonPlugin;
 import net.eithon.library.move.IBlockMoverFollower;
 import net.eithon.library.move.MoveEventHandler;
@@ -14,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
@@ -38,9 +40,48 @@ public class Controller implements IBlockMoverFollower {
 		this._allTelePads.delayedLoad(eithonPlugin, seconds);
 	}
 
+	public boolean createOrUpdateTelePad(Player player, String name, double upSpeed, double forwardSpeed) {
+		EithonLocation eithonLocation = new EithonLocation(player.getLocation());
+		Block pressurePlate = eithonLocation.searchForFirstBlockOfMaterial(Material.STONE_PLATE, 3);
+		if (pressurePlate == null) {
+			player.sendMessage("No stone plate within 3 blocks.");
+			return false;
+		}
+
+		Location playerLocation = player.getLocation();
+		Location padLocation = pressurePlate.getLocation();
+		// Remember where the player looked when the telepad was created/updated
+		padLocation.setYaw(playerLocation.getYaw());
+		padLocation.setPitch(playerLocation.getPitch());
+
+		TelePadInfo telePadInfo = this._allTelePads.getByName(name);
+		if ((upSpeed != 0.0) || (forwardSpeed != 0.0)) {
+			Vector velocity;
+			velocity = convertToVelocityVector(playerLocation.getYaw(), upSpeed, forwardSpeed);
+			if (telePadInfo != null) telePadInfo.setVelocity(velocity);
+			else telePadInfo = new TelePadInfo(name, padLocation, velocity, player);
+		} else {
+			if (telePadInfo != null) telePadInfo.setTarget(padLocation);
+			else telePadInfo = new TelePadInfo(name, padLocation, padLocation, player);
+		}
+		this._allTelePads.add(telePadInfo);
+		if (player != null) coolDown(player);
+		save();
+		return true;
+	}
+
+	private Vector convertToVelocityVector(double yaw, double upSpeed, double forwardSpeed) {
+		double rad = yaw*Math.PI/180.0;
+		double vectorX = -Math.sin(rad)*forwardSpeed;
+		double vectorY = upSpeed;
+		double vectorZ = Math.cos(rad)*forwardSpeed;
+		Vector jumpVector = new Vector(vectorX, vectorY, vectorZ);
+		return jumpVector;
+	}
+
 	public void maybeTele(Player player, Block pressurePlate) {
 		debug("maybeTele", "Enter");
-		
+
 		if (isAboutToTele(player)) {
 			debug("maybeTele", "Player already waiting for teleport to happen");
 			return;
@@ -50,7 +91,7 @@ public class Controller implements IBlockMoverFollower {
 			debug("maybeTele", "Player is in cool down period");
 			return;
 		}
-		
+
 		Location location = pressurePlate.getLocation();
 		TelePadInfo info = this._allTelePads.getByLocation(location);
 		if (info == null) return;
@@ -70,7 +111,7 @@ public class Controller implements IBlockMoverFollower {
 		JumperInfo jumperInfo = new JumperInfo(player);
 		this._playersAboutToTele.put(player,  jumperInfo);
 		MoveEventHandler.addBlockMover(player, this);
-		
+
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
@@ -185,8 +226,50 @@ public class Controller implements IBlockMoverFollower {
 		// TODO: Inform player about change of plans
 	}
 
+	public TelePadInfo getByNameOrInformUser(CommandSender sender, String name) {
+		TelePadInfo info = this._allTelePads.getByName(name);
+		if (info != null) return info;
+		Config.M.unknownTelePad.sendMessage(sender, name);
+		return null;
+	}
+
+	public boolean verifyNameIsNew(Player player, String name) {
+		TelePadInfo info = this._allTelePads.getByName(name);
+		if (info != null)
+		{
+			player.sendMessage("Telepad already exists: " + name);
+			return true;		
+		}
+		return true;
+	}
+
 	@Override
 	public String getName() {
 		return this._eithonPlugin.getName();
+	}
+
+	public void save() {
+		this._allTelePads.delayedSave(this._eithonPlugin, 0.0);	}
+
+	public void remove(TelePadInfo info) {
+		this._allTelePads.remove(info);	
+		save();
+	}
+
+	public void link(TelePadInfo info1, TelePadInfo info2) {
+		info1.setTarget(info2.getSourceAsTarget());
+		info2.setTarget(info1.getSourceAsTarget());
+		save();
+	}
+
+	public void gotoTelepad(Player player, TelePadInfo info) {	
+		player.teleport(info.getSourceAsTarget());
+		coolDown(player);
+	}
+
+	public void listTelepads(Player player) {
+		for (TelePadInfo info : this._allTelePads.getAll()) {
+			player.sendMessage(info.toString());
+		}
 	}
 }
