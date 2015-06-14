@@ -217,8 +217,9 @@ public class Controller implements IBlockMoverFollower {
 			return false;
 		}
 		jumperInfo.setAboutToTele(false);
-		removeEffects(player, jumperInfo);
 		this._playersAboutToTele.remove(player);
+		removeEffects(player, jumperInfo);
+		this._coolDown.removePlayer(player);
 		Config.M.movedOffTelePad.sendMessage(player);
 		debug("maybeStopTele", "Leave");
 		return true;
