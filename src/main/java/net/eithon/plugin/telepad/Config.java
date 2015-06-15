@@ -15,6 +15,7 @@ public class Config {
 	}
 	public static class V {
 		public static long ticksBeforeTele;
+		public static long ticksBeforeJump;
 		public static long nauseaTicks;
 		public static long slownessTicks;
 		public static long blindnessTicks;
@@ -22,11 +23,12 @@ public class Config {
 		public static int secondsToPauseBeforeNextTeleport;
 		
 		static void load(Configuration config) {
-			ticksBeforeTele = config.getInt("TeleportAfterTicks", 0);
-			nauseaTicks = config.getInt("NauseaTicks", 0);
+			ticksBeforeTele = config.getInt("TeleportAfterTicks", 100);
+			ticksBeforeJump = config.getInt("JumpAfterTicks", 0);
+			nauseaTicks = config.getInt("NauseaTicks", 200);
 			slownessTicks = config.getInt("SlownessTicks", 0);
 			blindnessTicks = config.getInt("BlindnessTicks", 0);
-			disableEffectsAfterTicks = config.getInt("DisableEffectsAfterTicks", 0);
+			disableEffectsAfterTicks = config.getInt("DisableEffectsAfterTicks", 120);
 			secondsToPauseBeforeNextTeleport = config.getInt("SecondsToPauseBeforeNextTeleport", 5);
 		}
 

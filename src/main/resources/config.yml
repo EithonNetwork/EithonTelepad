@@ -28,9 +28,14 @@ BlindnessTicks: 0
 DisableEffectsAfterTicks: 120
 
 #
-# From the time when the user activates the TelePad, how long until we actually TelePad
+# From the time when the user activates the TelePad, how long until we actually teleport
 #
 TeleportAfterTicks: 100
+
+#
+# From the time when the user activates the TelePad, how long until we actually jump
+#
+JumpAfterTicks: 0
 
 #
 # The time to wait before we load the telepad data from file

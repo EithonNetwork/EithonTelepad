@@ -72,6 +72,8 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 	}
 	
 	public boolean hasVelocity() { return this._hasVelocity; }
+	
+	public boolean isJumpPad() { return hasVelocity(); }
 
 	@Override
 	public TelePadInfo factory() {
@@ -123,10 +125,12 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 
 	public void setTarget(Location location) {
 		this._targetLocation = new EithonLocation(location);
+		this._hasVelocity = false;
 	}
 
 	public void setVelocity(Vector velocity) {
 		this._velocity = velocity;
+		this._hasVelocity = true;;
 	}
 
 	String getTelePadName() {

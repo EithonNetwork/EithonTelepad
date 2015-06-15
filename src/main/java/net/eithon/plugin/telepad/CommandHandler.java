@@ -10,7 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class CommandHandler implements ICommandHandler {
-	private static final String ADD_COMMAND = "/telepad add <name>";
+	private static final String ADD_COMMAND = "/telepad add <name> [<up speed> <forward speed>]";
 	private static final String VELOCITY_COMMAND = "/telepad velocity <name> <up speed> <forward speed>";
 	private static final String GOTO_COMMAND = "/telepad goto <name>";
 	private static final String LIST_COMMAND = "/telepad list";
@@ -58,14 +58,14 @@ public class CommandHandler implements ICommandHandler {
 	void addCommand(CommandParser commandParser)
 	{
 		if (!commandParser.hasPermissionOrInformSender("telepad.add")) return;
-		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 2)) return;
+		if (!commandParser.hasCorrectNumberOfArgumentsOrShowSyntax(2, 4)) return;
 
 		String name =commandParser.getArgumentStringAsLowercase();
 		Player player = commandParser.getPlayer();
-		if (!this._controller.verifyNameIsNew(player, name)) return;	
+		if (!this._controller.verifyNameIsNew(player, name)) return;
 
-		double upSpeed = 0.0;
-		double forwardSpeed = 0.0;
+		double upSpeed = commandParser.getArgumentDouble(0.0);
+		double forwardSpeed = commandParser.getArgumentDouble(0.0);
 
 		boolean success = this._controller.createOrUpdateTelePad(player, name, upSpeed, forwardSpeed);
 		if (success) {
