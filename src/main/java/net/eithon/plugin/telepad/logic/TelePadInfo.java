@@ -1,11 +1,13 @@
 package net.eithon.plugin.telepad.logic;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 import net.eithon.library.extensions.EithonLocation;
 import net.eithon.library.extensions.EithonPlayer;
 import net.eithon.library.json.Converter;
 import net.eithon.library.json.IJson;
+import net.eithon.plugin.telepad.Config;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -70,9 +72,9 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 
 	TelePadInfo() {
 	}
-	
+
 	public boolean hasVelocity() { return this._hasVelocity; }
-	
+
 	public boolean isJumpPad() { return hasVelocity(); }
 
 	@Override
@@ -94,7 +96,7 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		this._creator = EithonPlayer.getFromJSon(jsonObject.get("creator"));
 		return this;
 	}
-	
+
 	public static TelePadInfo createFromJson(Object json) {
 		TelePadInfo info = new TelePadInfo();
 		return info.fromJson(json);
@@ -179,6 +181,29 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 	}
 
 	public String toString() {
-		return String.format("%s (%s): from %s to %s", getTelePadName(), getPlayerName(), getSource().getBlock().toString(), getTargetLocation().toString());
+		HashMap<String,String> namedArguments = getNamedArguments();
+		if (isJumpPad()) {
+			return Config.M.jumpInfo.getMessage(namedArguments);
+		} else {
+			return Config.M.telePadAdded.getMessage(namedArguments);			
+		}
+	}	
+
+	private HashMap<String,String> getNamedArguments() {
+		HashMap<String,String> namedArguments = new HashMap<String, String>();
+		namedArguments.put("NAME", getTelePadName());
+		if (isJumpPad()) {
+			namedArguments.put("VELOCITY", this._velocity.toString());
+			namedArguments.put("LINKED_TO", "-");
+			namedArguments.put("UP_SPEED", "0.0");
+			namedArguments.put("FORWARD_SPEED", "0.0");
+		} else {
+			namedArguments.put("VELOCITY", "-");
+			namedArguments.put("UP_SPEED", "-");
+			namedArguments.put("FORWARD_SPEED", "-");
+			namedArguments.put("LINKED_TO", getTargetLocation().toString());
+		}
+
+		return namedArguments;
 	}
 }

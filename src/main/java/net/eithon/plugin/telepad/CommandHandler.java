@@ -144,7 +144,7 @@ public class CommandHandler implements ICommandHandler {
 
 		Player player = commandParser.getPlayer();
 
-		player.sendMessage("Tele pads:");
+		player.sendMessage("TelePads:");
 		this._controller.listTelepads(player);
 	}
 

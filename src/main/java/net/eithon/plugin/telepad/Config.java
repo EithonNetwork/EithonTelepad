@@ -47,6 +47,8 @@ public class Config {
 		public static ConfigurableMessage gotoTelePad;
 		public static ConfigurableMessage movedOffTelePad;
 		public static ConfigurableMessage unknownTelePad;
+		public static ConfigurableMessage jumpInfo;
+		public static ConfigurableMessage teleportInfo;
 
 		static void load(Configuration config) {
 			telePadAdded = config.getConfigurableMessage("TelePadAdded", 1,
@@ -61,8 +63,11 @@ public class Config {
 					"You have been teleported to TelePad %s.");
 			movedOffTelePad = config.getConfigurableMessage("MovedOffTelePad_0", 0,
 					"You moved away from the telepad, cancelling teleport.");
-			unknownTelePad = config.getConfigurableMessage("UnknownTelePad_1", 1,
-					"Unknown telepad (%s).");
+			String[] parameterNames = {"NAME", "VELOCITY", "UP_SPEED", "FORWARD_SPEED", "LINKED_TO"};
+			jumpInfo = config.getConfigurableMessage("JumpInfo", 0,
+					"%NAME%: Up %UP_SPEED%, forward %FORWARD_SPEED%", parameterNames);
+			teleportInfo = config.getConfigurableMessage("TeleportInfo", 0,
+					"%NAME: Linked to %LINKED_TO%", parameterNames);
 		}		
 	}
 
