@@ -28,9 +28,14 @@ BlindnessTicks: 0
 DisableEffectsAfterTicks: 120
 
 #
-# From the time when the user activates the TelePad, how long until we actually TelePad
+# From the time when the user activates the TelePad, how long until we actually teleport
 #
 TeleportAfterTicks: 100
+
+#
+# From the time when the user activates the TelePad, how long until we actually jump
+#
+JumpAfterTicks: 0
 
 #
 # The time to wait before we load the telepad data from file
@@ -71,7 +76,17 @@ messages:
   #
   # Parameters: <telepad name> (%s)
   UnknownTelePad_1: Unknown telepad (%s).
-
+  
+  #
+  # The following messages have the following possible parameters
+  # %NAME%: The name of the telepad.
+  # %VELOCITY%: The velocity for a jump telepad.
+  # %UP_SPEED%: The up speed for a jump telepad.
+  # %FORWARD_SPEED%: The forward speed for a jump telepad.
+  # %LINKED_TO%: The telepad that a teleport telepad is linked to
+  #
+  JumpInfo: "%NAME%: Up %UP_SPEED%, forward %FORWARD_SPEED%"
+  TeleportInfo: "%NAME: Linked to %LINKED_TO%"
 
 
 

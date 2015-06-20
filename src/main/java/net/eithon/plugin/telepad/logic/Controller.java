@@ -111,30 +111,39 @@ public class Controller implements IBlockMoverFollower {
 		JumperInfo jumperInfo = new JumperInfo(player);
 		this._playersAboutToTele.put(player,  jumperInfo);
 		MoveEventHandler.addBlockMover(player, this);
-		addPotionEffects(player, jumperInfo);
-		delayedRemoveEffects(player, jumperInfo);
-		delayedTeleport(player, info, jumperInfo);
+		if (!info.isJumpPad()) {
+			debug("teleSoon", "Add potion effects for teleport.");
+			addPotionEffects(player, jumperInfo);
+			delayedRemoveEffects(player, jumperInfo);
+			debug("teleSoon", "Call delayedTeleport");
+			delayedTeleport(player, info, jumperInfo);
+		} else {
+			debug("teleSoon", "No potion effects for jump.");
+			debug("teleSoon", "Call delayedJump");
+			delayedJump(player, info, jumperInfo);			
+		}
+		debug("teleSoon", "Leave");
 	}
 
 	private void addPotionEffects(Player player, JumperInfo jumperInfo) {
 		ArrayList<PotionEffect> effects = new ArrayList<PotionEffect>();
 		PotionEffect nausea = null;
 		if (Config.V.nauseaTicks > 0) {
-			debug("teleSoon", "Add nausea");
+			debug("addPotionEffects", "Add nausea");
 			nausea = new PotionEffect(PotionEffectType.CONFUSION, (int) Config.V.nauseaTicks, 4);
 			effects.add(nausea);
 			jumperInfo.setNausea(true);
 		}
 		PotionEffect slowness = null;
 		if (Config.V.nauseaTicks > 0) {
-			debug("teleSoon", "Add slowness");
+			debug("addPotionEffects", "Add slowness");
 			slowness = new PotionEffect(PotionEffectType.SLOW, (int) Config.V.slownessTicks, 4);
 			effects.add(slowness);
 			jumperInfo.setSlowness(true);
 		}
 		PotionEffect blindness = null;
 		if (Config.V.blindnessTicks > 0) {
-			debug("teleSoon", "Add blindness");
+			debug("addPotionEffects", "Add blindness");
 			blindness = new PotionEffect(PotionEffectType.BLINDNESS, (int) Config.V.blindnessTicks, 4);
 			effects.add(blindness);
 			jumperInfo.setBlindness(true);
@@ -159,64 +168,78 @@ public class Controller implements IBlockMoverFollower {
 		}, Config.V.disableEffectsAfterTicks);
 	}
 
+	private void delayedJump(
+			Player player, 
+			TelePadInfo info,
+			JumperInfo jumperInfo) {
+		debug("delayedJump", "Enter");
+		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
+			public void run() {
+				debug("delayedJump task", "Prepare");
+				prepareForJumpOrTele(player, info, jumperInfo);
+				debug("delayedJump task", "JUMP!");
+				jump(player, info);
+			}
+		}, Config.V.ticksBeforeJump);
+		debug("delayedJump", "Leave");
+	}
+
 	private void delayedTeleport(
 			Player player, 
 			TelePadInfo info,
 			JumperInfo jumperInfo) {
-		Controller thisController = this;
+		debug("delayedTeleport", "Enter");
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
-				JumperInfo latestJumperInfo = thisController._playersAboutToTele.get(player);
-				if (!jumperInfo.isSame(latestJumperInfo)){
-					debug("delayedTeleport", "There seems to exist a new teleport. Skip this.");
-					return;
-				}
-				debug("delayedTeleport", "Last chance to change our mind");
-				if (!isAboutToTele(player)) {
-					debug("delayedTeleport", "The teleport seems to have been cancelled");
-					return;
-				}
-				debug("delayedTeleport", "Mark the player for teleportation");
-				jumpOrTele(player, info, jumperInfo);
+				debug("delayedTeleport task", "Prepare");
+				prepareForJumpOrTele(player, info, jumperInfo);
+				debug("delayedTeleport task", "TELEPORT!");
+				tele(player, info);
 			}
 		}, Config.V.ticksBeforeTele);
+		debug("delayedTeleport", "Leave");
+	}
+
+	void prepareForJumpOrTele(Player player, TelePadInfo info, JumperInfo jumperInfo) {
+		debug("prepareForJumpOrTele", "Enter");
+		JumperInfo latestJumperInfo = this._playersAboutToTele.get(player);
+		if (!jumperInfo.isSame(latestJumperInfo)){
+			debug("prepareForJumpOrTele", "There seems to exist a another new jump/teleport. Skip this one.");
+			return;
+		}
+		debug("prepareForJumpOrTele", "Last chance to change our mind");
+		if (!isAboutToTele(player)) {
+			debug("delayedTeleport", "The jump/teleport seems to have been cancelled");
+			return;
+		}
+		jumperInfo.setAboutToTele(false);
+		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
+		MoveEventHandler.removeBlockMover(player, this);
+		coolDown(player);
 	}
 
 	void removeEffects(Player player, JumperInfo jumperInfo) {
 		jumperInfo.removeEffects();
 		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
 	}
-
+	
+	/*
 	private float stopPlayer(Player player) {
 		float walkSpeed = player.getWalkSpeed();
 		player.setWalkSpeed(0.0F);
 		player.setVelocity(new Vector(0.0, 0.0, 0.0));
 		return walkSpeed;
 	}
+	*/
 
-	void jumpOrTele(Player player, TelePadInfo info, JumperInfo jumperInfo) {
-		jumperInfo.setAboutToTele(false);
-		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
-		MoveEventHandler.removeBlockMover(player, this);
-		coolDown(player);
-		debug("jumpOrTele", "Enter");
-		if (info.hasVelocity()) {
-			debug("jumpOrTele", "JUMP!");
-			jump(player, info);
-		}
-		else {
-			debug("jumpOrTele", "TELEPORT!");
-			tele(player, info);
-		}
-	}
-
-	private void tele(Player player, TelePadInfo info) {
+	void tele(Player player, TelePadInfo info) {
 		Location targetLocation = info.getTargetLocation();
 		player.teleport(targetLocation);
 	}
 
-	private void jump(Player player, TelePadInfo info) {
+	void jump(Player player, TelePadInfo info) {
 		Vector jumpPadVelocity = info.getVelocity();
 		Vector velocity = new Vector(jumpPadVelocity.getX(), jumpPadVelocity.getY(), jumpPadVelocity.getZ());
 		player.setVelocity(velocity);
