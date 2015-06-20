@@ -56,27 +56,16 @@ public class Controller implements IBlockMoverFollower {
 
 		TelePadInfo telePadInfo = this._allTelePads.getByName(name);
 		if ((upSpeed != 0.0) || (forwardSpeed != 0.0)) {
-			Vector velocity;
-			velocity = convertToVelocityVector(playerLocation.getYaw(), upSpeed, forwardSpeed);
-			if (telePadInfo != null) telePadInfo.setVelocity(velocity);
-			else telePadInfo = new TelePadInfo(name, padLocation, velocity, player);
+			if (telePadInfo != null) telePadInfo.setVelocity(upSpeed, forwardSpeed, playerLocation.getYaw());
+			else telePadInfo = new TelePadInfo(name, padLocation, upSpeed, forwardSpeed, playerLocation.getYaw(), player);
 		} else {
-			if (telePadInfo != null) telePadInfo.setTarget(padLocation);
+			if (telePadInfo != null) telePadInfo.setTarget(telePadInfo);
 			else telePadInfo = new TelePadInfo(name, padLocation, padLocation, player);
 		}
 		this._allTelePads.add(telePadInfo);
 		if (player != null) coolDown(player);
 		save();
 		return true;
-	}
-
-	private Vector convertToVelocityVector(double yaw, double upSpeed, double forwardSpeed) {
-		double rad = yaw*Math.PI/180.0;
-		double vectorX = -Math.sin(rad)*forwardSpeed;
-		double vectorY = upSpeed;
-		double vectorZ = Math.cos(rad)*forwardSpeed;
-		Vector jumpVector = new Vector(vectorX, vectorY, vectorZ);
-		return jumpVector;
 	}
 
 	public void maybeTele(Player player, Block pressurePlate) {
@@ -322,8 +311,8 @@ public class Controller implements IBlockMoverFollower {
 	}
 
 	public void link(TelePadInfo info1, TelePadInfo info2) {
-		info1.setTarget(info2.getSourceAsTarget());
-		info2.setTarget(info1.getSourceAsTarget());
+		info1.setTarget(info2);
+		info2.setTarget(info1);
 		save();
 	}
 

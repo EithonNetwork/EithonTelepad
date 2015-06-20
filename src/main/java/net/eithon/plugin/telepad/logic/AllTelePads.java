@@ -134,6 +134,13 @@ public class AllTelePads {
 			info.fromJson((JSONObject) array.get(i));
 			this.add(info);
 		}
+		for (TelePadInfo info : this._telePadsByName.values()) {
+			if (!info.isJumpPad()) {
+				TelePadInfo target = getByLocation(info.getTargetLocation());
+				if (target == null) continue;
+				info.setTarget(target);
+			}
+		}
 	}
 
 	void debug(String method, String message) {

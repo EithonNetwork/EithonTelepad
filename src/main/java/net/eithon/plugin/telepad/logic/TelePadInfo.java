@@ -18,6 +18,10 @@ import org.json.simple.JSONObject;
 public class TelePadInfo implements IJson<TelePadInfo> {
 	private EithonLocation _sourceLocation;
 	private EithonLocation _targetLocation;
+	private TelePadInfo _targetTelepad;
+	private double _upSpeed;
+	private double _forwardSpeed;
+	private float _yaw;
 	private Vector _velocity;
 	private String _telePadName;
 	private EithonPlayer _creator;
@@ -35,13 +39,6 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		}
 	}
 
-	TelePadInfo(String name, Location sourceLocation, UUID creatorId, String creatorName)
-	{
-		this._telePadName = name;
-		this._sourceLocation = new EithonLocation(sourceLocation);
-		this._creator = new EithonPlayer(creatorId, creatorName);
-	}
-
 	public TelePadInfo(String name, Location sourceLocation, Location targetLocation, Player creator)
 	{
 		this(name, sourceLocation, creator);
@@ -49,24 +46,17 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		this._hasVelocity = false;
 	}
 
-	public TelePadInfo(String name, Location sourceLocation, Vector velocity, Player creator)
+	public TelePadInfo(String name, Location sourceLocation, double upSpeed, double forwardSpeed, float yaw, Player creator)
 	{
 		this(name, sourceLocation, creator);
-		this._velocity = velocity;
-		this._hasVelocity = true;
+		setVelocity(upSpeed, forwardSpeed, yaw);
 	}
 
-	TelePadInfo(String name, Location sourceLocation, Location targetLocation, UUID creatorId, String creatorName)
-	{
-		this(name, sourceLocation, creatorId, creatorName);
-		this._targetLocation = new EithonLocation(targetLocation);
-		this._hasVelocity = false;
-	}
-
-	TelePadInfo(String name, Location sourceLocation, Vector velocity, UUID creatorId, String creatorName)
-	{
-		this(name, sourceLocation, creatorId, creatorName);
-		this._velocity = velocity;
+	void setVelocity(double upSpeed, double forwardSpeed, float yaw) {
+		this._upSpeed = upSpeed;
+		this._forwardSpeed = forwardSpeed;
+		this._yaw = yaw;
+		this._velocity = convertToVelocityVector(upSpeed, forwardSpeed, yaw);
 		this._hasVelocity = true;
 	}
 
@@ -89,12 +79,20 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		this._sourceLocation = EithonLocation.getFromJson(jsonObject.get("sourceLocation"));
 		this._hasVelocity = (boolean) jsonObject.get("hasVelocity");
 		if (this._hasVelocity) {
-			this._velocity = Converter.toVector((JSONObject)jsonObject.get("velocity"));
+			velocityFromJson(jsonObject.get("velocity"));
 		} else {
 			this._targetLocation = EithonLocation.getFromJson(jsonObject.get("targetLocation"));
 		}
 		this._creator = EithonPlayer.getFromJSon(jsonObject.get("creator"));
 		return this;
+	}
+
+	private void velocityFromJson(Object json) {
+		JSONObject jsonObject = (JSONObject) json;
+		this._upSpeed = (double) jsonObject.get("upSpeed");
+		this._forwardSpeed = (double) jsonObject.get("forwardSpeed");
+		this._yaw = (float) (double) jsonObject.get("yaw");
+		this._velocity = convertToVelocityVector(this._upSpeed, this._forwardSpeed, this._yaw);
 	}
 
 	public static TelePadInfo createFromJson(Object json) {
@@ -109,11 +107,20 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		json.put("sourceLocation", this._sourceLocation.toJson());
 		json.put("hasVelocity", this._hasVelocity);
 		if (this._hasVelocity) {
-			json.put("velocity", Converter.fromVector(this._velocity));
+			json.put("velocity", velocityToJson());
 		} else {
 			json.put("targetLocation", this._targetLocation.toJson());
 		}
 		json.put("creator", this._creator.toJson());
+		return json;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object velocityToJson() {
+		JSONObject json = new JSONObject();
+		json.put("upSpeed", this._upSpeed);
+		json.put("forwardSpeed", this._forwardSpeed);
+		json.put("yaw", this._yaw);
 		return json;
 	}
 
@@ -125,14 +132,10 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		return this._velocity;
 	}
 
-	public void setTarget(Location location) {
-		this._targetLocation = new EithonLocation(location);
+	public void setTarget(TelePadInfo target) {
+		this._targetTelepad = target;
+		this._targetLocation = new EithonLocation(target.getSourceAsTarget());
 		this._hasVelocity = false;
-	}
-
-	public void setVelocity(Vector velocity) {
-		this._velocity = velocity;
-		this._hasVelocity = true;;
 	}
 
 	String getTelePadName() {
@@ -193,17 +196,30 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		HashMap<String,String> namedArguments = new HashMap<String, String>();
 		namedArguments.put("NAME", getTelePadName());
 		if (isJumpPad()) {
-			namedArguments.put("VELOCITY", this._velocity.toString());
 			namedArguments.put("LINKED_TO", "-");
-			namedArguments.put("UP_SPEED", "0.0");
-			namedArguments.put("FORWARD_SPEED", "0.0");
+			namedArguments.put("UP_SPEED", Double.toString(this._upSpeed));
+			namedArguments.put("FORWARD_SPEED", Double.toString(this._forwardSpeed));
+			namedArguments.put("VELOCITY", Double.toString(this._velocity.length()));
 		} else {
-			namedArguments.put("VELOCITY", "-");
 			namedArguments.put("UP_SPEED", "-");
 			namedArguments.put("FORWARD_SPEED", "-");
-			namedArguments.put("LINKED_TO", getTargetLocation().toString());
+			namedArguments.put("VELOCITY", "-");
+			if (this._targetTelepad == null) {
+				namedArguments.put("LINKED_TO", getTargetLocation().toString());
+			} else {
+				namedArguments.put("LINKED_TO", this._targetTelepad.getTelePadName());				
+			}
 		}
 
 		return namedArguments;
+	}
+
+	private Vector convertToVelocityVector(double upSpeed, double forwardSpeed, double yaw) {
+		double rad = yaw*Math.PI/180.0;
+		double vectorX = -Math.sin(rad)*forwardSpeed;
+		double vectorY = upSpeed;
+		double vectorZ = Math.cos(rad)*forwardSpeed;
+		Vector velocityVector = new Vector(vectorX, vectorY, vectorZ);
+		return velocityVector;
 	}
 }
