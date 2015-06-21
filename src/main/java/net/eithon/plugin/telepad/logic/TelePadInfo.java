@@ -188,7 +188,7 @@ public class TelePadInfo implements IJson<TelePadInfo> {
 		if (isJumpPad()) {
 			return Config.M.jumpInfo.getMessage(namedArguments);
 		} else {
-			return Config.M.telePadAdded.getMessage(namedArguments);			
+			return Config.M.teleportInfo.getMessage(namedArguments);			
 		}
 	}	
 

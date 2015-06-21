@@ -166,7 +166,7 @@ public class Controller implements IBlockMoverFollower {
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
 				debug("delayedJump task", "Prepare");
-				prepareForJumpOrTele(player, info, jumperInfo);
+				if (!prepareAndIsReady(player, info, jumperInfo)) return;
 				debug("delayedJump task", "JUMP!");
 				jump(player, info);
 			}
@@ -183,30 +183,31 @@ public class Controller implements IBlockMoverFollower {
 		scheduler.scheduleSyncDelayedTask(this._eithonPlugin, new Runnable() {
 			public void run() {
 				debug("delayedTeleport task", "Prepare");
-				prepareForJumpOrTele(player, info, jumperInfo);
+				if (!prepareAndIsReady(player, info, jumperInfo)) return;
 				debug("delayedTeleport task", "TELEPORT!");
-				tele(player, info);
+				teleport(player, info);
 			}
 		}, Config.V.ticksBeforeTele);
 		debug("delayedTeleport", "Leave");
 	}
 
-	void prepareForJumpOrTele(Player player, TelePadInfo info, JumperInfo jumperInfo) {
+	boolean prepareAndIsReady(Player player, TelePadInfo info, JumperInfo jumperInfo) {
 		debug("prepareForJumpOrTele", "Enter");
 		JumperInfo latestJumperInfo = this._playersAboutToTele.get(player);
 		if (!jumperInfo.isSame(latestJumperInfo)){
 			debug("prepareForJumpOrTele", "There seems to exist a another new jump/teleport. Skip this one.");
-			return;
+			return false;
 		}
 		debug("prepareForJumpOrTele", "Last chance to change our mind");
 		if (!isAboutToTele(player)) {
 			debug("delayedTeleport", "The jump/teleport seems to have been cancelled");
-			return;
+			return false;
 		}
 		jumperInfo.setAboutToTele(false);
 		if (jumperInfo.canBeRemoved()) this._playersAboutToTele.remove(player);
 		MoveEventHandler.removeBlockMover(player, this);
 		coolDown(player);
+		return true;
 	}
 
 	void removeEffects(Player player, JumperInfo jumperInfo) {
@@ -223,7 +224,7 @@ public class Controller implements IBlockMoverFollower {
 	}
 	*/
 
-	void tele(Player player, TelePadInfo info) {
+	void teleport(Player player, TelePadInfo info) {
 		Location targetLocation = info.getTargetLocation();
 		player.teleport(targetLocation);
 	}
